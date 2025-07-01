@@ -1,10 +1,10 @@
 > 🚧 This README is a work in progress 🚧
 
-# Welcome to Open Calendar
+# Open Calendar
 
-OpenCalendar is a modern web calendar frontend for CalDAV based calendars.
+Open Calendar is a modern web calendar frontend for CalDAV based calendars.
 
-**Insert OpenCalendar image**
+**Insert Open Calendar image**
 
 
 ## Features
@@ -16,7 +16,7 @@ It can deal with many CalDAV calendars at once, and also discover calendars dire
 It supports all the features you would expect from a calendar client with little to no configuration: hide or show calendars or copy their URLs; drag, drop and resize events; show recurrent events, alarms, attendees and more.
 
 ### Easily customizable
-OpenCalendar is built to be customizable and integrated into larger apps.
+Open Calendar is built to be customizable and integrated into larger apps.
 Events content, forms, dropdowns and even notifications can be replaced by custom ones with ease
 
 ### Well documented
@@ -25,12 +25,12 @@ Documentation for the API as well as examples can be found **Insert documentatio
 
 ## Quick start
 
-First, install OpenCalendar with the package manager of your choice (`yarn` in this case):
+First, install Open Calendar with the package manager of your choice (`yarn` in this case):
 ```bash
 yarn add open-calendar
 ```
 
-Once this is done, you can add OpenCalendar to your application at different levels: 
+Once this is done, you can add Open Calendar to your application at different levels: 
 
 ### Minimal setup
 With just a few lines of code, you can get a ready-to-use CalDAV client web application. All you need to do is call `createCalendar`:

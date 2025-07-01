@@ -1,8 +1,0 @@
-# Ignore everything
-*
-
-# Only include the files we want
-!package.json
-!README.md
-!LICEN[CS]E
-!dist/*

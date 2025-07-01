@@ -1,9 +1,21 @@
 {
   "name": "open-calendar",
   "version": "0.9.0",
-  "title": "Open Calendar",
   "description": "A modern web calendar frontend for CalDAV based calendars",
+  "homepage": "https://github.com/algoo/open-calendar",
+  "bugs": {
+    "url": "https://github.com/algoo/open-calendar/issues"
+  },
   "license": "MIT",
+  "files": [
+    "./dist/*"
+  ],
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "browser": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "repository": "github:algoo/open-calendar",
   "scripts": {
     "dev": "vite",
     "build": "yarn clean && webpack --progress",
@@ -46,8 +58,5 @@
     "webpack": "^5.99.9",
     "webpack-cli": "^6.0.1"
   },
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": "./dist/index.js"
-  }
+  "private": true
 }
