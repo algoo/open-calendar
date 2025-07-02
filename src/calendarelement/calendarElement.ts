@@ -11,7 +11,7 @@ import { CalendarSelectDropdown } from '../calendarselectdropdown/calendarSelect
 import { icon, library } from '@fortawesome/fontawesome-svg-core'
 import { faRefresh } from '@fortawesome/free-solid-svg-icons'
 import { CalendarClient } from '../calendarClient'
-import i18n from '../i18n'
+import { getTranslations } from '../translations'
 import { EventBody } from '../eventBody/eventBody'
 
 library.add(faRefresh)
@@ -48,17 +48,6 @@ export class CalendarElement {
     this._client = new CalendarClient()
     this._selectedCalendars = new Set()
   }
-
-  // public static create = async (
-  //   sources: (ServerSource | CalendarSource)[],
-  //   target: Element | Document | ShadowRoot,
-  //   options?: CalendarElementOptions
-  // ) => {
-  //   const obj = new CalendarElement()
-  //   await obj._create(sources, target, options)
-  //   return obj
-  // }
-  // private _create = async (
 
   public create = async (
     sources: (ServerSource | CalendarSource)[],
@@ -117,7 +106,7 @@ export class CalendarElement {
             click: this.refreshEvents,
           },
           calendars: {
-            text: i18n.t('calendar', { count: 0 }),
+            text: getTranslations().calendarElement.calendars,
             click: this.onClickCalendars,
           },
         },
@@ -127,8 +116,8 @@ export class CalendarElement {
           center: 'title',
           end: (options?.views ?? ['timeGridDay', 'timeGridWeek', 'dayGridMonth', 'listWeek']).join(','),
         },
-        buttonText: i18n.getResourceBundle(i18n.language, 'translation'),
-        allDayContent: i18n.t('allDay'),
+        buttonText: getTranslations().calendarElement,
+        allDayContent: getTranslations().calendarElement.allDay,
         dayMaxEvents: true,
         nowIndicator: true,
 

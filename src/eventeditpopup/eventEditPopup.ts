@@ -5,13 +5,13 @@ import { Popup } from '../popup/popup'
 import { parseHtml } from '../helpers/dom-helper'
 import { getRRuleString, isEventAllDay, offsetDate } from '../helpers/ics-helper'
 import { tzlib_get_ical_block, tzlib_get_offset, tzlib_get_timezones } from 'timezones-ical-library'
-import i18n from '../i18n'
+import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
 
 const html = /*html*/`
 <form name="event" class="event-edit form">
   <div class="form-content">
-    <label for="event-edit-calendar">{{t.calendar_one}}</label>
+    <label for="event-edit-calendar">{{t.calendar}}</label>
     <select id="event-edit-calendar" name="calendar" required="">
 
     </select>
@@ -46,18 +46,18 @@ const html = /*html*/`
         <input type="email" name="email-organizer" placeholder="{{t.email}}" />
         <input type="text" name="name-organizer" placeholder="{{t.name}}" />
     </div>
-    <label for="event-edit-attendees">{{t.attendee_zero}}</label>
+    <label for="event-edit-attendees">{{t.attendees}}</label>
     <div id="event-edit-attendees" >
         <div class="form-list"> </div>
         <button type="button">{{t.addAttendee}}</button>
     </div>
     <label for="event-edit-rrule">{{t.rrule}}</label>
     <select id="event-edit-rrule" name="rrule">
-      <option value="">{{t.rrules.none}}</option>
+      <option value="">{{trrules.none}}</option>
       {{#rrules}}
       <option value="{{rule}}">{{label}}</option>
       {{/rrules}}
-      <option id="event-edit-rrule-unchanged" value="">{{t.rrules.unchanged}}</option>
+      <option id="event-edit-rrule-unchanged" value="">{{trrules.unchanged}}</option>
     </select>
     <label for="event-edit-description">{{t.description}}</label>
     <textarea id="event-edit-description" name="description"> </textarea>
@@ -103,15 +103,15 @@ export class EventEditPopup {
 
   public constructor(target: Node) {
     const timezones = tzlib_get_timezones() as string[]
-    const translations = i18n.getResourceBundle(i18n.language, 'translation')
 
     this._recurringPopup = new RecurringEventPopup(target)
 
     this._popup = new Popup(target)
     this._form = parseHtml<HTMLFormElement>(html, {
-      t: translations,
+      t: getTranslations().eventForm,
+      trrules: getTranslations().rrules,
       timezones: timezones,
-      rrules: namedRRules.map(rule => ({ rule, label: i18n.t(`rrules.${rule}`)})),
+      rrules: namedRRules.map(rule => ({ rule, label: getTranslations().rrules[rule]})),
     })[0]
     this._popup.content.appendChild(this._form)
 
@@ -135,7 +135,7 @@ export class EventEditPopup {
   private setCalendars = (calendars: Calendar[]) => {
     const calendarElements = parseHtml<HTMLOptionElement>(calendarsHtml, {
       calendars,
-      t: i18n.getResourceBundle(i18n.language, 'translation'),
+      t: getTranslations().eventForm,
     })
     this._calendar.innerHTML = ''
     this._calendar.append(...Array.from(calendarElements))
@@ -145,8 +145,8 @@ export class EventEditPopup {
     const element = parseHtml<HTMLDivElement>(attendeeHtml, {
       ...attendee,
       role: attendee.role || 'REQ-PARTICIPANT',
-      roles: attendeeRoleTypes.map(role => ({ key: role, translation: i18n.t(`attendeeRoles.${role}`) })),
-      t: i18n.getResourceBundle(i18n.language, 'translation'),
+      roles: attendeeRoleTypes.map(role => ({ key: role, translation: getTranslations().attendeeRoles[role] })),
+      t: getTranslations().eventForm,
     })[0]
     this._attendees.appendChild(element)
 

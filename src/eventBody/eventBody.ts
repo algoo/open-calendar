@@ -6,7 +6,7 @@ import { faRepeat, faBell } from '@fortawesome/free-solid-svg-icons'
 import './eventBody.css'
 import { isEventAllDay } from '../helpers/ics-helper'
 import type { IcsAttendeePartStatusType } from 'ts-ics'
-import i18n from '../i18n'
+import { getTranslations } from '../translations'
 
 library.add(faRepeat, faBell)
 
@@ -62,11 +62,11 @@ export class EventBody {
         name: a.name ?? a.email,
         email: a.email,
         role: ((a.role as IcsAttendeeRoleType) ?? 'NON-PARTICIPANT').toLowerCase(),
-        tRole: i18n.t(`attendeeRoles.${(a.role as IcsAttendeeRoleType) ?? 'NON-PARTICIPANT'}`),
-        tPartstat: i18n.t(`partStatus.${(a.partstat as IcsAttendeePartStatusType) ?? 'NEEDS-ACTION'}`),
+        tRole: getTranslations().attendeeRoles[(a.role as IcsAttendeeRoleType) ?? 'NON-PARTICIPANT'],
+        tPartstat: getTranslations().partStatus[(a.partstat as IcsAttendeePartStatusType) ?? 'NEEDS-ACTION'],
         partstat: ((a.partstat as IcsAttendeePartStatusType) ?? 'NEEDS-ACTION').toLowerCase(),
       })) : undefined,
-      t: i18n.getResourceBundle(i18n.language, 'translation'),
+      t: getTranslations().eventBody,
     }))
   }
 }

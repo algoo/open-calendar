@@ -30,7 +30,7 @@ export async function fetchCalendarObjects(
 ): Promise<{ calendarObjects: CalendarObject[], recurringObjects: CalendarObject[] }> {
   const davCalendarObjects = await davFetchCalendarObjects({
     calendar: calendar,
-    timeRange, expand, // TODO needs radicale 3.2
+    timeRange, expand,
     headers: calendar.headers,
     fetchOptions: calendar.fetchOptions,
   })

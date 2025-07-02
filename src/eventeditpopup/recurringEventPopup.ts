@@ -1,6 +1,6 @@
 import { Popup } from '../popup/popup'
 import { parseHtml } from '../helpers/dom-helper'
-import i18n from '../i18n'
+import { getTranslations } from '../translations'
 
 const html = /*html*/`
 <div class="form">
@@ -20,10 +20,8 @@ export class RecurringEventPopup {
   private _popup: Popup
 
   public constructor(target: Node) {
-    const translations = i18n.getResourceBundle(i18n.language, 'translation')
-
     this._popup = new Popup(target)
-    this._element = parseHtml<HTMLDivElement>(html, { t: translations })[0]
+    this._element = parseHtml<HTMLDivElement>(html, { t: getTranslations().recurringForm })[0]
     this._popup.content.appendChild(this._element)
 
     const editAll = this._element.querySelector<HTMLButtonElement>('.form-buttons [name="edit-all"]')!

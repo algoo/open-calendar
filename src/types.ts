@@ -1,10 +1,10 @@
 import type { IcsCalendar, IcsEvent, IcsRecurrenceId } from 'ts-ics'
 import type { DAVCalendar } from 'tsdav'
 
-type DomEvent = GlobalEventHandlersEventMap[keyof GlobalEventHandlersEventMap]
+export type DomEvent = GlobalEventHandlersEventMap[keyof GlobalEventHandlersEventMap]
 
-export type CustomTranslation = {
-  [lng: string]: unknown,
+export type RecursivePartial<T> = {
+  [P in keyof T]?: RecursivePartial<T[P]>
 }
 
 // TODO add <TCalendarUid = any>
