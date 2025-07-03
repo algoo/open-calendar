@@ -1,10 +1,10 @@
 import { createCalendar as createEventCalendar, DayGrid, TimeGrid, List, Interaction, destroyCalendar as destroyEventCalendar } from '@event-calendar/core'
 import type { Calendar as EventCalendar } from '@event-calendar/core'
 import '@event-calendar/core/index.css'
-import { getEventEnd, getEventEndFromDuration, type IcsDateObject, type IcsEvent } from 'ts-ics'
+import { getEventEnd, type IcsEvent } from 'ts-ics'
 import { EventEditPopup } from '../eventeditpopup/eventEditPopup'
 import { hasCalendarHandlers, hasEventHandlers } from '../helpers/types-helper'
-import type { CalendarOptions, CalendarSource, ServerSource, EventUid, EventEditHandlers, CalendarEvent, EventChangeHandlers, SelectCalendarHandlers, SelectedCalendar, View, BodyHandlers, EventBodyInfo } from '../types'
+import type { CalendarOptions, CalendarSource, ServerSource, EventUid, EventEditHandlers, CalendarEvent, EventChangeHandlers, SelectCalendarHandlers, SelectedCalendar, View, BodyHandlers, EventBodyInfo, DomEvent } from '../types'
 import { isEventAllDay, offsetDate } from '../helpers/ics-helper'
 import './calendarElement.css'
 import { CalendarSelectDropdown } from '../calendarselectdropdown/calendarSelectDropdown'
@@ -109,10 +109,14 @@ export class CalendarElement {
             text: getTranslations().calendarElement.calendars,
             click: this.onClickCalendars,
           },
+          newEvent: {
+            text: getTranslations().calendarElement.newEvent,
+            click: this.onClickNewEvent,
+          },
         },
         slotEventOverlap: false,
         headerToolbar: {
-          start: 'calendars,refresh prev,today,next',
+          start: 'calendars,refresh newEvent prev,today,next',
           center: 'title',
           end: (options?.views ?? ['timeGridDay', 'timeGridWeek', 'dayGridMonth', 'listWeek']).join(','),
         },
@@ -223,44 +227,46 @@ export class CalendarElement {
     }
   }
 
+  private onClickNewEvent = (jsEvent: MouseEvent) => this.createEvent(jsEvent)
+
   private onSelectDate = ({ allDay, date, jsEvent}: EventCalendar.DateClickInfo) => {
-    const type = allDay ? 'DATE' : 'DATE-TIME'
-    const start: IcsDateObject = {
-      date: ecDateToDate(date, allDay),
-      type: type,
-    }
-    const newEvent: IcsEvent = {
-      summary: '',
-      start,
-      end: {
-        date: getEventEndFromDuration(start.date, allDay ? { days: 1 } : { minutes: 30 }),
-        type: type,
+    this.createEvent(jsEvent, {
+      start: {
+        date: ecDateToDate(date, allDay),
+        type: allDay ? 'DATE' : 'DATE-TIME',
       },
-      uid: '',
-      stamp: { date: new Date() },
-    }
-    this._eventEditHandlers!.onCreateEvent({
-      jsEvent,
-      calendars: this._client.getCalendars(),
-      event: newEvent,
-      handleCreate: this.handleCreateEvent,
     })
   }
 
   private onSelectTimeRange = ({ allDay, start, end, jsEvent}: EventCalendar.SelectInfo) => {
     const type = allDay ? 'DATE' : 'DATE-TIME'
-    const newEvent: IcsEvent = {
-      summary: '',
+    this.createEvent(jsEvent, {
       start: {
         date: ecDateToDate(start, allDay),
-        type: type,
+        type,
       },
       end: {
         date: ecDateToDate(end, allDay),
-        type: type,
+        type,
       },
+    })
+  }
+
+  private createEvent = (jsEvent: DomEvent, event?: Partial<IcsEvent>) => {
+    const start = event?.start ?? {
+      date: new Date(),
+      type: 'DATE-TIME',
+    }
+    const newEvent = {
+      summary: '',
       uid: '',
       stamp: { date: new Date() },
+      start,
+      end: offsetDate(start, (start.type == 'DATE' ? (1*24*60): 30) * 60 * 1000),
+      ...event,
+
+      // NOTE - CJ - 2025-07-03 - Since we specify end, duration should be undefined
+      duration: undefined,
     }
     this._eventEditHandlers!.onCreateEvent({
       jsEvent,

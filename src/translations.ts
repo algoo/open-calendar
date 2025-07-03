@@ -16,6 +16,7 @@ const en = {
     'today': 'Today',
     'allDay': 'Daily',
     'calendars': 'Calendars',
+    'newEvent': 'New Event',
   },
   'eventForm': {
     'allDay': 'Daily',

@@ -260,8 +260,6 @@ export class EventEditPopup {
     const rrule = data.get('rrule') as string
     const description = data.get('description') as string
 
-    // HACK - CJ - 2025-07-03 - Disable error as we only deal with start/end and not start/duration
-    // @ts-expect-error either end or duration will be defined
     const event: IcsEvent = {
       ...this._event!,
       summary: data.get('summary') as string,
@@ -283,6 +281,9 @@ export class EventEditPopup {
         role: roles[i],
       })) || undefined,
       recurrenceRule: rrule ? convertIcsRecurrenceRule(undefined, {value: rrule}) : undefined,
+
+      // NOTE - CJ - 2025-07-03 - explicitly set `duration` to undefined as we set `end`
+      duration: undefined,
     }
     const response = await this._handleSave!({ calendarUrl: data.get('calendar') as string, event })
     if (response.ok) this._popup.setVisible(false)

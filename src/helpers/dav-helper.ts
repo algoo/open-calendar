@@ -167,7 +167,8 @@ async function davFetchCalendar(params: {
     calendarColor: calendar.props?.calendarColor,
     displayName: calendar.props?.displayname._cdata ?? calendar.props?.displayname,
     components: Array.isArray(calendar.props?.supportedCalendarComponentSet.comp)
-      // HACK - CJ - 2025-07-03 - this code works in tsdav but I don't know the type of `sc` and eslint complains
+      // NOTE - CJ - 2025-07-03 - comp represents an list of XML nodes in the DAVResponse format
+      // sc could be `<C:comp name="VEVENT" />`
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? calendar.props?.supportedCalendarComponentSet.comp.map((sc: any) => sc._attributes.name)
       : [calendar.props?.supportedCalendarComponentSet.comp?._attributes.name],
