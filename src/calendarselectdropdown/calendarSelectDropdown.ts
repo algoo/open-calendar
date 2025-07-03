@@ -18,11 +18,8 @@ const html = /* html */`
 export class CalendarSelectDropdown {
   private _container: HTMLDivElement | null = null
 
-  public constructor() { }
-
-  public destroy = () => {
-    // TODO
-  }
+  public constructor() {}
+  public destroy = () => {}
 
   public onSelect = ({jsEvent, calendars, handleSelect, selectedCalendars }: SelectCalendarsClickInfo) => {
     const target = jsEvent.target as Element

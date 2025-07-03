@@ -134,7 +134,7 @@ function validateTimezones(calendarObjectData: IcsCalendar) {
   })
 }
 
-// Inspired from https://github.com/natelindev/tsdav/blob/master/src/calendar.ts, fetchCalendars
+// NOTE - CJ - 2025/07/03 - Inspired from https://github.com/natelindev/tsdav/blob/master/src/calendar.ts, fetchCalendars
 async function davFetchCalendar(params: {
   url: string,
   headers?: Record<string, string>,
@@ -154,7 +154,7 @@ async function davFetchCalendar(params: {
   const response = await propfind({ url, headers, fetchOptions, props })
   const calendar = response[0]
   if (calendar.error) {
-    // TODO
+    // TODO - CJ - 2025-07-03 - Proper error handling
     throw 'Calendar does not exists'
   }
   const description = calendar.props?.calendarDescription
@@ -167,6 +167,7 @@ async function davFetchCalendar(params: {
     calendarColor: calendar.props?.calendarColor,
     displayName: calendar.props?.displayname._cdata ?? calendar.props?.displayname,
     components: Array.isArray(calendar.props?.supportedCalendarComponentSet.comp)
+      // HACK - CJ - 2025-07-03 - this code works in tsdav but I don't know the type of `sc` and eslint complains
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? calendar.props?.supportedCalendarComponentSet.comp.map((sc: any) => sc._attributes.name)
       : [calendar.props?.supportedCalendarComponentSet.comp?._attributes.name],

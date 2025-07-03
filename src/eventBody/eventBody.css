@@ -1,4 +1,6 @@
 .ec-event {
+  /* NOTE - CJ - 2025-07-03 - Overrides the min heigh of the event to be one line. !important is needed as this is set manually on the element */
+  /* eslint-disable-next-line css/no-important */
   min-height: 1.5rem !important;
 }
 

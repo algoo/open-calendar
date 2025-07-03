@@ -12,8 +12,8 @@
       text-align: right;
     }
 
-    /* TODO replace by something else that supports localization */
-    label:after {
+    /* FIXME - CJ - 2025-07-03 - replace by something else that supports localization */
+    & label::after {
       content: ":";
     }
 
@@ -33,7 +33,7 @@
     display: flex;
     gap: 1rem;
 
-    >* {
+    &>* {
       flex-grow: 1;
     }
   }

@@ -7,9 +7,10 @@ export type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>
 }
 
-// TODO add <TCalendarUid = any>
-// TODO add options to support IcsEvent custom props
+// TODO - CJ - 2025-07-03 - add <TCalendarUid = any> generic
+// TODO - CJ - 2025-07-03 - add options to support IcsEvent custom props
 export type Calendar = DAVCalendar & {
+  // INFO - CJ - 2025-07-03 - Useful fields from 'DAVCalendar'
   // ctag?: string
   // description?: string;
   // displayName?: string | Record<string, unknown>;
@@ -31,9 +32,6 @@ export type EventUid = {
   uid: string
   recurrenceId?: IcsRecurrenceId
 }
-
-// export const alarmActionTypes = ["DISPLAY"] as const;
-// export type IcsAlarmActionTypes = typeof alarmActionTypes;
 
 export const attendeeRoleTypes = [
   'CHAIR',
@@ -143,7 +141,7 @@ export type EventEditHandlers = {
 export type EventChangeInfo = {
   calendarUrl: string
   event: IcsEvent
-  // ? Do we keep this as this is for the entire CalendarOBject and not the event itself
+  // FIXME - CJ - 2025-07-30 - Do we keep this as this is for the entire CalendarOBject and not the event itself ?
   ical: string
 }
 
@@ -162,11 +160,17 @@ export type CalendarElementOptions = {
 }
 
 export type CalendarOptions =
-  CalendarElementOptions // may define options or not
-  & (SelectCalendarHandlers | Record<never, never>) // must define all handlers or none
-  & (EventEditHandlers | Record<never, never>) // must define all handlers or none
-  & EventChangeHandlers // may define handlers or not
-  & Partial<BodyHandlers> // may define handlers or not, but they will be assigned a default value if they are not
+  // NOTE - CJ - 2025-07-03
+  // May define individual options or not
+  CalendarElementOptions
+  // Must define all handlers or none
+  & (SelectCalendarHandlers | Record<never, never>)
+  // Must define all handlers or none
+  & (EventEditHandlers | Record<never, never>)
+  // May define individual handlers or not
+  & EventChangeHandlers
+  // May define handlers or not, but they will be assigned a default value if they are not
+  & Partial<BodyHandlers>
 
 export type CalendarResponse = {
   response: Response

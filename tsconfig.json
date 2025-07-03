@@ -8,14 +8,11 @@
     "declaration": true,
     "declarationDir": "./build/",
     "esModuleInterop": true,
-    
     /* Bundler mode */
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    // "noEmit": true,
-
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -25,13 +22,11 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "allowSyntheticDefaultImports": true,
-
-    /* Compilation worked file when I added `tsconfig-paths-webpack-plugin` but I could not find a working plugin for the .d.ts files */
+    /* FIXME - CJ - 2025-07-03 - Compilation worked file when I added `tsconfig-paths-webpack-plugin` but I could not find a working plugin for the .d.ts files */
     // "baseUrl": "./src",
     // "paths": {
     //     "@helpers/*": ["./helpers/*"],
     //     "@calendar-types": ["./types.ts"]
     // },
   },
-
 }

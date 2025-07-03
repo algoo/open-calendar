@@ -131,7 +131,7 @@ export class EventEditPopup {
   }
 
   public destroy = () => {
-    // TODO
+    this._form.remove()
   }
 
   private setCalendars = (calendars: Calendar[]) => {
@@ -198,30 +198,35 @@ export class EventEditPopup {
       )
     const localEnd = end.local ?? { date: end.date, timezone: 'UTC', tzoffset: '+0000' }
 
+    const inputs = this._form.elements;
+    (inputs.namedItem('calendar') as HTMLInputElement).value = calendarUrl;
+    (inputs.namedItem('calendar') as HTMLInputElement).disabled = event.recurrenceId !== undefined;
+    // FIXME - CJ - 2025/06/03 - changing an object of calendar is not supported;
+    (inputs.namedItem('calendar') as HTMLInputElement).disabled ||=
+      !this._form.classList.contains('open-calendar-event-edit-create');
+    (inputs.namedItem('summary') as HTMLInputElement).value = event.summary ?? '';
+    (inputs.namedItem('location') as HTMLInputElement).value = event.location ?? '';
+    (inputs.namedItem('allday') as HTMLInputElement).checked = isEventAllDay(event)
+    const startDateTime = localStart.date.toISOString().split('T');
+    (inputs.namedItem('start-date') as HTMLInputElement).value = startDateTime[0];
+    (inputs.namedItem('start-time') as HTMLInputElement).value = startDateTime[1].slice(0, 5);
+    (inputs.namedItem('start-timezone') as HTMLInputElement).value = localStart.timezone
+    const endDateTime = localEnd.date.toISOString().split('T');
+    (inputs.namedItem('end-date') as HTMLInputElement).value = endDateTime[0];
+    (inputs.namedItem('end-time') as HTMLInputElement).value = endDateTime[1].slice(0, 5);
+    (inputs.namedItem('end-timezone') as HTMLInputElement).value = localEnd.timezone;
+    // TODO - CJ - 2025-07-03 - Add rich text support
+    (inputs.namedItem('description') as HTMLInputElement).value = event.description ?? '';
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputs: { [key: string]: any } = this._form.elements
-    inputs['calendar'].value = calendarUrl
-    inputs['calendar'].disabled = event.recurrenceId
-    inputs['summary'].value = event.summary ?? ''
-    inputs['location'].value = event.location ?? ''
-    inputs['allday'].checked = isEventAllDay(event)
-    inputs['start-date'].value = localStart.date.toISOString().split('T')[0]
-    inputs['start-time'].value = localStart.date.toISOString().split('T')[1].slice(0, 5)
-    inputs['start-timezone'].value = localStart.timezone
-    inputs['end-date'].value = localEnd.date.toISOString().split('T')[0]
-    inputs['end-time'].value = localEnd.date.toISOString().split('T')[1].slice(0, 5)
-    inputs['end-timezone'].value = localEnd.timezone
-    inputs['description'].value = event.description ?? '' // TODO rich text
-
-    // TODO check if ifs needed, as I think thunderbird add them to the attendees list
-    inputs['email-organizer'].value = event.organizer?.email ?? ''
-    inputs['name-organizer'].value = event.organizer?.name ?? ''
+    // TODO - CJ - 2025-07-03 - Check if needs to be hidden or done differently,
+    // as I believe Thunderbird also adds the organizer to the attendee list;
+    (inputs.namedItem('email-organizer') as HTMLInputElement).value = event.organizer?.email ?? '';
+    (inputs.namedItem('name-organizer') as HTMLInputElement).value = event.organizer?.name ?? ''
 
     const rrule =  getRRuleString(event.recurrenceRule)
-    this._rruleUnchanged.value = rrule
-    inputs['rrule'].value = rrule
-    inputs['rrule'].disabled = event.recurrenceId
+    this._rruleUnchanged.value = rrule;
+    (inputs.namedItem('rrule') as HTMLInputElement).value = rrule;
+    (inputs.namedItem('rrule') as HTMLInputElement).disabled = event.recurrenceId !== undefined
 
     this._attendees.innerHTML = ''
     for (const attendee of event.attendees ?? []) this.addAttendee(attendee)
@@ -255,6 +260,7 @@ export class EventEditPopup {
     const rrule = data.get('rrule') as string
     const description = data.get('description') as string
 
+    // HACK - CJ - 2025-07-03 - Disable error as we only deal with start/end and not start/duration
     // @ts-expect-error either end or duration will be defined
     const event: IcsEvent = {
       ...this._event!,

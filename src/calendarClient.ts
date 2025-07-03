@@ -45,8 +45,8 @@ export class CalendarClient {
   private getCalendarObject = (uid: IcsEvent): CalendarObject | undefined => {
     for (const calendarObject of this._calendarObjectsPerCalendar.flat()) {
       for (const event of calendarObject.data.events ?? []) {
-        // Since we look are just looking for the CalendarObject and not the event in particular,
-        // we just need to check the uid
+        // NOTE - CJ - 2025-07-03 - Since we look are just looking for the CalendarObject and not the event,
+        // we just need to check the uid of any event, and not the recurrenceID
         if (event.uid !== uid.uid) continue
         if (event.recurrenceId) {
           for (const recurringObject of this._recurringObjectsPerCalendar.flat()) {
@@ -70,9 +70,9 @@ export class CalendarClient {
     const calendar = this.getCalendarByUrl(calendarUrl)
     if (!calendar) return { response: new Response(null, { status: 404 }), ical: '' }
     const calendarObject: IcsCalendar = {
-      // prodId is a FPI (https://en.wikipedia.org/wiki/Formal_Public_Identifier)
+      // INFO - CJ - 2025-07-03 - prodId is a FPI (https://en.wikipedia.org/wiki/Formal_Public_Identifier)
+      // '+//IDN algoo.fr//NONSGML Open Calendar v0.9//EN' would also be possible
       prodId: '-//algoo.fr//NONSGML Open Calendar v0.9//EN',
-      // prodId: '+//IDN algoo.fr//NONSGML Open Calendar v0.9//EN',
       version: '2.0',
       events: [event],
     }
@@ -86,12 +86,13 @@ export class CalendarClient {
     if (!calendarObject) return { response: new Response(null, { status: 404 }), ical: '' }
     const calendar = this.getCalendarByUrl(calendarObject.calendarUrl)!
 
+    // FIXME - CJ - 2025-03-07 - Doing a deep copy probably be a better idea and avoid further issues
     // Only a shallow copy as we modify the items directly
     const oldEvents = calendarObject.data.events ? [...calendarObject.data.events] : []
 
     const index = calendarObject.data.events!.findIndex(e => isSameEvent(e, event))
 
-    // Modified an recurring event instance for the 1st time
+    // Modified an recurring event instance for the 1st time, add it to the list
     if (event.recurrenceId && index === -1) {
       calendarObject.data.events!.push(event)
     } else {
@@ -125,6 +126,7 @@ export class CalendarClient {
     if (!calendarObject) return { response: new Response(null, { status: 404 }), ical: '' }
     const calendar = this.getCalendarByUrl(calendarObject.calendarUrl)!
 
+    // FIXME - CJ - 2025-03-07 - Doing a deep copy probably be a better idea and avoid further issues
     // Only a shallow copy as we modify the items directly
     const oldEvents = calendarObject.data.events ? [...calendarObject.data.events] : undefined
 
@@ -147,6 +149,7 @@ export class CalendarClient {
 
     const action = calendarObject.data.events!.length === 0 ? deleteCalendarObject : updateCalendarObject
     const response = await action(calendar, calendarObject)
+
     if (!response.response.ok) calendarObject.data.events = oldEvents
     return response
   }

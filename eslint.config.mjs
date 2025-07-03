@@ -2,7 +2,7 @@ import js from '@eslint/js'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 import json from '@eslint/json'
-// import css from '@eslint/css'
+import css from '@eslint/css'
 import stylistic from '@stylistic/eslint-plugin'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
@@ -26,7 +26,7 @@ export default defineConfig([
     extends: ['js/recommended'],
   },
   { files: ['**/*.{js,mjs,cjs,ts,mts,cts}'], languageOptions: { globals: globals.browser } },
-  // { files: ['src/**/*.css'], plugins: { css }, language: 'css/css', extends: ['css/recommended'] },
+  { files: ['src/**/*.css'], plugins: { css }, language: 'css/css', extends: ['css/recommended'] },
   { files: ['locales/*/*.json'], plugins: { json }, language: 'json/json', extends: ['json/recommended'] },
   tseslint.configs.recommended,
   globalIgnores(['dist', 'build', 'webpack.config.js']),

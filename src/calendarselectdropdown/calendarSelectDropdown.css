@@ -5,6 +5,9 @@
   z-index: 1500;
 
   background-color: white;
+  /* CJ - 2025-07-03 - '--ec-button-border-color' is defined by EventCalendar */
+  /* FIXME - CJ - 2025-07-03 - I tried set the rule option 'allowUnknownVariables' to in 'eslint.config.mjs' but this made the config fail*/
+  /* eslint-disable-next-line css/no-invalid-properties */
   border: 1px solid var(--ec-button-border-color);
   padding: 0.375rem 0.75rem;
   font-size: 1rem;
@@ -23,14 +26,14 @@
   width: 0.75rem;
 }
 
-/* Added in order to make the `top: 100%` use the heigh of the parent and not of the window */
+/* HACK - CJ - 2025-03-07 - Added in order to make the `top: 100%` use the heigh of the parent and not of the window */
 .ec-button-group:has(.open-calendar-calendar-select-container) {
   position: relative;
 }
 
-/* prevents the addition of the popup to affect the style of the button (as it is not the first child anymore */
-.ec-calendars {
-  margin-left: 0 !important;
-  border-top-left-radius: 0.25rem !important;
-  border-bottom-left-radius: 0.25rem !important;
+/* HACK - CJ - 2025-03-07 - Prevents the addition of the popup to affect the style of the button (as it is not the first child anymore */
+.ec-button-group .ec-calendars:not(:first-child) {
+  margin-left: 0;
+  border-top-left-radius: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
 }

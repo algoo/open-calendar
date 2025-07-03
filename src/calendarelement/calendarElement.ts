@@ -16,7 +16,7 @@ import { EventBody } from '../eventBody/eventBody'
 
 library.add(faRefresh)
 
-// When an event is the whole day, the date returned by caldav is in UTC (20250627)
+// HACK - CJ - 2025-07-03 - When an event is the whole day, the date returned by caldav is in UTC (20250627)
 // but since we display the local date, it's interpreted in our timezone (20250627T000200)
 // and for all day events, EC round up to the nearest day (20250628)
 // In the end the event is displayed for one extra day
@@ -123,6 +123,7 @@ export class CalendarElement {
 
         firstDay: 1,
 
+        // NOTE - CJ - 2025-07-03
         // @ts-expect-error This member is not present in "@types/event-calendar__core"
         eventResizableFromStart: options?.editable ?? true,
         selectable: options?.editable ?? true,
@@ -282,8 +283,8 @@ export class CalendarElement {
       newEvent.end = offsetDate(newEvent.end, endDelta)
     }
 
-    // TODO add and api call onMoveResizeEvent
-    // for ex to allow a popup to open to ask if you want to change a single/all events if a recurrent event
+    // TODO - CJ - 2025-07-03 - Add an api 'onMoveResizeEvent'
+    // for ex. to allow a popup to open to ask if you want to change a single/all events if it's a recurrent event
     const response = await this.handleUpdateEvent({ calendarUrl: calendarEvent.calendarUrl, event: newEvent })
     if (!response.ok) info.revert()
   }

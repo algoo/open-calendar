@@ -1,5 +1,9 @@
 import type { RecursivePartial } from './types'
 
+// HACK - CJ - 2025-07-03 - Ideally, this object would have been a json file and imported with:
+// `import en from 'locale/en/translation.json'`
+// However, the lib used to create the declarations file `index.d.ts` thinks this is ts import
+// and looks for the file `locale/en/translation.json.d.ts` which doesn't exists.
 const en = {
   'calendarElement': {
     'timeGridDay': 'Day',
