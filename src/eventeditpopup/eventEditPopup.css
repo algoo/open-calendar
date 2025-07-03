@@ -8,12 +8,12 @@
   gap: 0.25rem;
 }
 
-/* Hide the time and timezone inputs if `All day` is checked */
+/* NOTE - CJ - 2025-07-03 - Hide the time and timezone inputs if `All day` is checked */
 .open-calendar-event-edit:has(#open-calendar-event-edit-allday:checked) .open-calendar-event-edit-not-allday {
   visibility: hidden;
 }
 
-/* Hide the `Delete` button we are creating an event */
+/* NOTE - CJ - 2025-07-03 - Hide the `Delete` button we are creating an event */
 .open-calendar-event-edit:is(.open-calendar-event-edit-create) button[name="delete"] {
   visibility: hidden;
 }

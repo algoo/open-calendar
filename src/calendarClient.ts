@@ -80,19 +80,19 @@ export class CalendarClient {
     return response
   }
 
-  // TODO change an event of calendar
+  // FIXME - CJ - 2025/06/03 - changing an object of calendar is not supported;
   public updateEvent = async ({ event }: CalendarEvent) => {
     const calendarObject = this.getCalendarObject(event)
     if (!calendarObject) return { response: new Response(null, { status: 404 }), ical: '' }
     const calendar = this.getCalendarByUrl(calendarObject.calendarUrl)!
 
-    // FIXME - CJ - 2025-03-07 - Doing a deep copy probably be a better idea and avoid further issues
-    // Only a shallow copy as we modify the items directly
+    // FIXME - CJ - 2025-07-03 - Doing a deep copy probably be a better idea and avoid further issues
     const oldEvents = calendarObject.data.events ? [...calendarObject.data.events] : []
 
     const index = calendarObject.data.events!.findIndex(e => isSameEvent(e, event))
 
-    // Modified an recurring event instance for the 1st time, add it to the list
+    // NOTE - CJ - 2025-07-03 - When an recurring event instance is modified for the 1st time,
+    // it's not present in the `events` list and needs to be added
     if (event.recurrenceId && index === -1) {
       calendarObject.data.events!.push(event)
     } else {
@@ -101,7 +101,7 @@ export class CalendarClient {
     }
 
     if (event.recurrenceRule) {
-      // Sync recurrenceIds
+      // INFO - CJ - 2025-07-03 - `recurrenceId` of modified events needs to be synced with `start` of the root event
       calendarObject.data.events = calendarObject.data.events!.map(element => {
         if (element === event || !isRRuleSourceEvent(element, event)) return element
         const recurrenceOffset = element.recurrenceId!.value.date.getTime() - oldEvents[index].start.date.getTime()
@@ -110,7 +110,7 @@ export class CalendarClient {
           recurrenceId: { value: offsetDate(event.start, recurrenceOffset) },
         }
       })
-      // Sync exceptionDates
+      // INFO - CJ - 2025-07-03 - `exceptionDates` needs to be synced with `start`
       event.exceptionDates = event.exceptionDates?.map(value => {
         const recurrenceOffset = value.date.getTime() - oldEvents[index].start.date.getTime()
         return offsetDate(event.start, recurrenceOffset)
@@ -126,11 +126,10 @@ export class CalendarClient {
     if (!calendarObject) return { response: new Response(null, { status: 404 }), ical: '' }
     const calendar = this.getCalendarByUrl(calendarObject.calendarUrl)!
 
-    // FIXME - CJ - 2025-03-07 - Doing a deep copy probably be a better idea and avoid further issues
-    // Only a shallow copy as we modify the items directly
+    // FIXME - CJ - 2025-07-03 - Doing a deep copy probably be a better idea and avoid further issues
     const oldEvents = calendarObject.data.events ? [...calendarObject.data.events] : undefined
 
-    // When removing a recurring event instance, add it to exceptionDates
+    // NOTE - CJ - 2025-07-03 - When removing a recurring event instance, add it to exceptionDates
     if (event.recurrenceId) {
       const rruleEvent = calendarObject.data.events!.find(e => isRRuleSourceEvent(event, e))!
       rruleEvent.exceptionDates ??= []

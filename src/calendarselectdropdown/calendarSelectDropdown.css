@@ -26,12 +26,12 @@
   width: 0.75rem;
 }
 
-/* HACK - CJ - 2025-03-07 - Added in order to make the `top: 100%` use the heigh of the parent and not of the window */
+/* HACK - CJ - 2025-07-03 - Added in order to make the `top: 100%` use the heigh of the parent and not of the window */
 .ec-button-group:has(.open-calendar-calendar-select-container) {
   position: relative;
 }
 
-/* HACK - CJ - 2025-03-07 - Prevents the addition of the popup to affect the style of the button (as it is not the first child anymore */
+/* HACK - CJ - 2025-07-03 - Prevents the addition of the popup to affect the style of the button (as it is not the first child anymore */
 .ec-button-group .ec-calendars:not(:first-child) {
   margin-left: 0;
   border-top-left-radius: 0.25rem;

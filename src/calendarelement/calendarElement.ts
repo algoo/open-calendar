@@ -123,7 +123,7 @@ export class CalendarElement {
 
         firstDay: 1,
 
-        // NOTE - CJ - 2025-07-03
+        // INFO - CJ - 2025-07-03
         // @ts-expect-error This member is not present in "@types/event-calendar__core"
         eventResizableFromStart: options?.editable ?? true,
         selectable: options?.editable ?? true,
