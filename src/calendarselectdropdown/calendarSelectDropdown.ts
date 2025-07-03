@@ -3,11 +3,11 @@ import type { SelectCalendarsClickInfo } from '../types'
 import './calendarSelectDropdown.css'
 
 const html = /* html */`
-<div class="calendar-select-container form">
-  <div class="form-content" >
+<div class="open-calendar-calendar-select-container open-calendar-form">
+  <div class="open-calendar-form-content" >
     {{#calendars}}
-    <label class="calendar-select-label">
-      <span class="calendar-select-color" style="background-color:{{calendarColor}}"> </span>
+    <label class="open-calendar-calendar-select-label">
+      <span class="open-calendar-calendar-select-color" style="background-color:{{calendarColor}}"> </span>
       {{displayName}}
     </label>
     <input type="checkbox"/>

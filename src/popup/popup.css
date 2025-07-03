@@ -1,4 +1,4 @@
-.popup-overlay {
+.open-calendar-popup-overlay {
     position: fixed;
     width: 100vw;
     height: 100vh;
@@ -11,11 +11,11 @@
     z-index: 2000;
 }
 
-.popup-overlay:is(.popup-hidden) {
+.open-calendar-popup-overlay:is(.open-calendar-popup-hidden) {
     display: none;
 }
 
-.popup-frame {
+.open-calendar-popup-frame {
     width: fit-content;
     height: fit-content;
     background-color: white;

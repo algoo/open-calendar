@@ -3,9 +3,9 @@ import { parseHtml } from '../helpers/dom-helper'
 import { getTranslations } from '../translations'
 
 const html = /*html*/`
-<div class="form">
+<div class="open-calendar-form">
   {{t.editRecurring}}
-  <div class="form-buttons">
+  <div class="open-calendar-form-buttons">
     <button name="edit-all" type="button">{{t.editAll}}</button>
     <button name="edit-single" type="button">{{t.editSingle}}</button>
   </div>
@@ -24,8 +24,10 @@ export class RecurringEventPopup {
     this._element = parseHtml<HTMLDivElement>(html, { t: getTranslations().recurringForm })[0]
     this._popup.content.appendChild(this._element)
 
-    const editAll = this._element.querySelector<HTMLButtonElement>('.form-buttons [name="edit-all"]')!
-    const editSingle = this._element.querySelector<HTMLButtonElement>('.form-buttons [name="edit-single"]')!
+    const editAll = this._element.querySelector<HTMLButtonElement>('.open-calendar-form-buttons [name="edit-all"]')!
+    const editSingle = this._element.querySelector<HTMLButtonElement>(
+      '.open-calendar-form-buttons [name="edit-single"]',
+    )!
 
     editAll.addEventListener('click', () => this.close(true))
     editSingle.addEventListener('click', () => this.close(false))

@@ -11,31 +11,35 @@ import { getTranslations } from '../translations'
 library.add(faRepeat, faBell)
 
 const html = /*html*/`
-<div class="event-body">
-  <div class="event-body-header">
-    <div class="event-body-time">
+<div class="open-calendar-event-body">
+  <div class="open-calendar-event-body-header">
+    <div class="open-calendar-event-body-time">
       <b>{{time}}</b>
     </div>
-    <div class="event-body-icons">
+    <div class="open-calendar-event-body-icons">
       {{#icons}}{{{.}}}{{/icons}}
     </div>
     {{summary}}
   </div>
   {{#location}}
-  <div class="event-body-location">{{{location}}}</div>
+  <div class="open-calendar-event-body-location">{{{location}}}</div>
   {{/location}}
-  <div class="event-body-attendees">
+  <div class="open-calendar-event-body-attendees">
     {{#organizer}}
     <span
         title="{{name}} <{{email}}>\n{{t.organizer}}"
-        class="event-body-organizer">
+        class="open-calendar-event-body-organizer">
       {{name}}
     </span>
     {{/organizer}}
     {{#attendees}}
     <span
         title="{{name}} <{{email}}>\n{{tRole}}\n{{tPartstat}}"
-        class="event-body-attendee event-body-attendee-{{role}} event-body-attendee-{{partstat}}">
+        class="
+          open-calendar-event-body-attendee open-calendar-event-body-attendee-{{role}}
+          open-calendar-event-body-attendee-{{partstat}}
+        "
+    >
       {{{name}}}
     </span>
     {{/attendees}}

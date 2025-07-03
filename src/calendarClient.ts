@@ -71,8 +71,8 @@ export class CalendarClient {
     if (!calendar) return { response: new Response(null, { status: 404 }), ical: '' }
     const calendarObject: IcsCalendar = {
       // prodId is a FPI (https://en.wikipedia.org/wiki/Formal_Public_Identifier)
-      prodId: '-//algoo.fr//NONSGML Algoo Calendar Client v0.1//EN',
-      // prodId: '+//IDN algoo.fr//NONSGML Algoo Calendar Client v0.1//EN',
+      prodId: '-//algoo.fr//NONSGML Open Calendar v0.9//EN',
+      // prodId: '+//IDN algoo.fr//NONSGML Open Calendar v0.9//EN',
       version: '2.0',
       events: [event],
     }

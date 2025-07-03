@@ -8,7 +8,7 @@
 </head>
 
 <body style="height: 100vh; margin:0; padding: 5px; box-sizing: border-box;">
-  <div id="calendar-client"></div>
+  <div id="open-calendar"></div>
   <script type="module">
     import { getBasicAuthHeaders } from "tsdav";
     import { createCalendar } from "./src";
@@ -17,7 +17,7 @@
     const password = window.prompt("password")
     createCalendar(
       [{ serverUrl: "http://localhost:5232", headers: getBasicAuthHeaders({ username, password }) }],
-      document.getElementById("calendar-client"),
+      document.getElementById("open-calendar"),
     )
   </script>
 </body>

@@ -9,60 +9,60 @@ import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
 
 const html = /*html*/`
-<form name="event" class="event-edit form">
-  <div class="form-content">
-    <label for="event-edit-calendar">{{t.calendar}}</label>
-    <select id="event-edit-calendar" name="calendar" required="">
+<form name="event" class="open-calendar-event-edit open-calendar-form">
+  <div class="open-calendar-form-content">
+    <label for="open-calendar-event-edit-calendar">{{t.calendar}}</label>
+    <select id="open-calendar-event-edit-calendar" name="calendar" required="">
 
     </select>
-    <label for="event-edit-summary">{{t.title}}</label>
-    <input type="text" id="event-edit-summary" name="summary" required="" />
-    <label for="event-edit-location">{{t.location}}</label>
-    <input type="text" id="event-edit-location" name="location" />
-    <label for="event-edit-allday">{{t.allDay}}</label>
-    <input type="checkbox" id="event-edit-allday" name="allday" />
-    <label for="event-edit-start">{{t.start}}</label>
-    <div id="event-edit-start" class="event-edit-datetime">
+    <label for="open-calendar-event-edit-summary">{{t.title}}</label>
+    <input type="text" id="open-calendar-event-edit-summary" name="summary" required="" />
+    <label for="open-calendar-event-edit-location">{{t.location}}</label>
+    <input type="text" id="open-calendar-event-edit-location" name="location" />
+    <label for="open-calendar-event-edit-allday">{{t.allDay}}</label>
+    <input type="checkbox" id="open-calendar-event-edit-allday" name="allday" />
+    <label for="open-calendar-event-edit-start">{{t.start}}</label>
+    <div id="open-calendar-event-edit-start" class="open-calendar-event-edit-datetime">
       <input type="date" name="start-date" required="" />
-      <input type="time" name="start-time" class="event-edit-not-allday" required="" />
-      <select name="start-timezone" class="event-edit-not-allday" required="">
+      <input type="time" name="start-time" class="open-calendar-event-edit-not-allday" required="" />
+      <select name="start-timezone" class="open-calendar-event-edit-not-allday" required="">
         {{#timezones}}
           <option value="{{.}}">{{.}}</option>
         {{/timezones}}
         </select>
     </div>
-    <label for="event-edit-end">{{t.end}}</label>
-    <div id="event-edit-end" class="event-edit-datetime">
+    <label for="open-calendar-event-edit-end">{{t.end}}</label>
+    <div id="open-calendar-event-edit-end" class="open-calendar-event-edit-datetime">
       <input type="date" name="end-date" required="" />
-      <input type="time" name="end-time" class="event-edit-not-allday" required="" />
-      <select name="end-timezone" class="event-edit-not-allday" required="">
+      <input type="time" name="end-time" class="open-calendar-event-edit-not-allday" required="" />
+      <select name="end-timezone" class="open-calendar-event-edit-not-allday" required="">
         {{#timezones}}
           <option value="{{.}}">{{.}}</option>
         {{/timezones}}
       </select>
     </div>
-    <label for="event-edit-organizer">{{t.organizer}}</label>
-    <div id="event-edit-organizer" class="form-attendee">
+    <label for="open-calendar-event-edit-organizer">{{t.organizer}}</label>
+    <div id="open-calendar-event-edit-organizer" class="open-calendar-event-edit-attendee">
         <input type="email" name="email-organizer" placeholder="{{t.email}}" />
         <input type="text" name="name-organizer" placeholder="{{t.name}}" />
     </div>
-    <label for="event-edit-attendees">{{t.attendees}}</label>
-    <div id="event-edit-attendees" >
-        <div class="form-list"> </div>
+    <label for="open-calendar-event-edit-attendees">{{t.attendees}}</label>
+    <div id="open-calendar-event-edit-attendees" >
+        <div class="open-calendar-form-list"> </div>
         <button type="button">{{t.addAttendee}}</button>
     </div>
-    <label for="event-edit-rrule">{{t.rrule}}</label>
-    <select id="event-edit-rrule" name="rrule">
+    <label for="open-calendar-event-edit-rrule">{{t.rrule}}</label>
+    <select id="open-calendar-event-edit-rrule" name="rrule">
       <option value="">{{trrules.none}}</option>
       {{#rrules}}
       <option value="{{rule}}">{{label}}</option>
       {{/rrules}}
-      <option id="event-edit-rrule-unchanged" value="">{{trrules.unchanged}}</option>
+      <option id="open-calendar-event-edit-rrule-unchanged" value="">{{trrules.unchanged}}</option>
     </select>
-    <label for="event-edit-description">{{t.description}}</label>
-    <textarea id="event-edit-description" name="description"> </textarea>
+    <label for="open-calendar-event-edit-description">{{t.description}}</label>
+    <textarea id="open-calendar-event-edit-description" name="description"> </textarea>
   </div>
-  <div class="form-buttons">
+  <div class="open-calendar-form-buttons">
     <button name="delete" type="button">{{t.delete}}</button>
     <button name="cancel" type="button">{{t.cancel}}</button>
     <button name="submit" type="submit">{{t.save}}</button>
@@ -76,7 +76,7 @@ const calendarsHtml = /*html*/`
 {{/calendars}}`
 
 const attendeeHtml = /*html*/`
-<div class="event-edit-attendee">
+<div class="open-calendar-event-edit-attendee">
   <input type="email" name="email" placeholder="{{t.email}}" required value="{{email}}"/>
   <input type="name" name="name" placeholder="{{t.name}}" value="{{name}}"/>
   <select name="role" value="{{role}}" required>
@@ -115,12 +115,14 @@ export class EventEditPopup {
     })[0]
     this._popup.content.appendChild(this._form)
 
-    this._calendar = this._form.querySelector<HTMLSelectElement>('#event-edit-calendar')!
-    this._attendees = this._form.querySelector<HTMLDivElement>('#event-edit-attendees > .form-list')!
-    const addAttendee = this._form.querySelector<HTMLDivElement>('#event-edit-attendees > button')!
-    const cancel = this._form.querySelector<HTMLButtonElement>('.form-buttons [name="cancel"]')!
-    const remove = this._form.querySelector<HTMLButtonElement>('.form-buttons [name="delete"]')!
-    this._rruleUnchanged = this._form.querySelector<HTMLOptionElement>('#event-edit-rrule-unchanged')!
+    this._calendar = this._form.querySelector<HTMLSelectElement>('#open-calendar-event-edit-calendar')!
+    this._attendees = this._form.querySelector<HTMLDivElement>(
+      '#open-calendar-event-edit-attendees > .open-calendar-form-list',
+    )!
+    const addAttendee = this._form.querySelector<HTMLDivElement>('#open-calendar-event-edit-attendees > button')!
+    const cancel = this._form.querySelector<HTMLButtonElement>('.open-calendar-form-buttons [name="cancel"]')!
+    const remove = this._form.querySelector<HTMLButtonElement>('.open-calendar-form-buttons [name="delete"]')!
+    this._rruleUnchanged = this._form.querySelector<HTMLOptionElement>('#open-calendar-event-edit-rrule-unchanged')!
 
     this._form.addEventListener('submit', async (e) => { e.preventDefault(); await this.save() })
     addAttendee.addEventListener('click', () => this.addAttendee({ email: '' }))
@@ -158,7 +160,7 @@ export class EventEditPopup {
   }
 
   public onCreate = ({calendars, event, handleCreate}: EventEditCreateInfo) => {
-    this._form.classList.toggle('event-edit-create', true)
+    this._form.classList.toggle('open-calendar-event-edit-create', true)
     this._handleSave = handleCreate
     this._handleDelete = null
     this.open('', event, calendars)
@@ -171,7 +173,7 @@ export class EventEditPopup {
     handleDelete,
     handleUpdate,
   }: EventEditUpdateInfo) => {
-    this._form.classList.toggle('event-edit-create', false)
+    this._form.classList.toggle('open-calendar-event-edit-create', false)
     this._handleSave = handleUpdate
     this._handleDelete = handleDelete
     if (!recurringEvent) this.open(calendarUrl, event, calendars)
@@ -251,6 +253,7 @@ export class EventEditPopup {
     const names = data.getAll('name') as string[]
     const roles = data.getAll('role') as string[]
     const rrule = data.get('rrule') as string
+    const description = data.get('description') as string
 
     // @ts-expect-error either end or duration will be defined
     const event: IcsEvent = {
@@ -259,7 +262,8 @@ export class EventEditPopup {
       location: data.get('location') as string || undefined,
       start: getTimeObject('start'),
       end: getTimeObject('end'),
-      description: data.get('description') as string || undefined,
+      description: description || undefined,
+      descriptionAltRep: description === this._event!.description ? this._event!.descriptionAltRep : undefined,
       organizer: data.get('email-organizer')
         ? {
           ...this._event!.organizer,
