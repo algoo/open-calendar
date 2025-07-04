@@ -18,7 +18,10 @@
   },
   "browser": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "repository": "github:algoo/open-calendar",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/algoo/open-calendar.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "yarn clean && webpack --progress",
