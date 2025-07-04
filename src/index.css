@@ -1,41 +1,42 @@
-.open-calendar-form {
+.open-calendar__form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-
-  .open-calendar-form-content {
-    display: grid;
-    grid-template-columns: max-content max-content;
-    grid-gap: 5px;
-
-    label {
-      text-align: right;
-    }
-
-    input[type=checkbox] {
-      justify-self: left;
-    }
-  }
-
-  .open-calendar-form-list {
-    display: flex;
-    flex-direction: column;
-    grid-gap: 0.25rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .open-calendar-form-buttons {
-    display: flex;
-    gap: 1rem;
-  }
 }
 
-/* FIXME - CJ - 2025-07-03 - replace by something else that supports localization */
-.open-calendar-form-content label::after {
-  content: ":";
+.open-calendar__form__content {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  grid-gap: 5px;
+
+  label {
+    text-align: right;
+  }
+
+  /* FIXME - CJ - 2025-07-03 - replace by something else that supports localization */
+  label::after {
+    content: ":";
+  }
+
+  input[type=checkbox] {
+    justify-self: left;
+  }
+
 }
 
-.open-calendar-form-buttons>* {
+.open-calendar__form__list {
+  display: flex;
+  flex-direction: column;
+  grid-gap: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.open-calendar__form__buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.open-calendar__form__buttons>* {
   flex-grow: 1;
 }
 

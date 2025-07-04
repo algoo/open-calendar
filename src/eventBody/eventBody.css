@@ -4,80 +4,80 @@
   min-height: 1.5rem !important;
 }
 
-.open-calendar-event-body {
+.open-calendar__event-body {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  --open-calendar-event-body-gap: 2px;
+  --open-calendar__event-body__gap: 2px;
   display: flex;
   flex-direction: column;
 }
 
-.open-calendar-event-body-time {
+.open-calendar__event-body__time {
   float: left;
   display: flex;
-  margin-right: var(--open-calendar-event-body-gap);
+  margin-right: var(--open-calendar__event-body__gap);
 }
 
-.open-calendar-event-body-icons {
+.open-calendar__event-body__icons {
   float: right;
   display: flex;
-  gap: var(--open-calendar-event-body-gap);
-  margin-left: var(--open-calendar-event-body-gap);
+  gap: var(--open-calendar__event-body__gap);
+  margin-left: var(--open-calendar__event-body__gap);
   align-items: center;
   height: 1.5em;
 }
 
 
-.open-calendar-event-body-attendees {
+.open-calendar__event-body__attendees {
   display: flex;
   flex-direction: row;
   gap: 0px 5px;
   flex-wrap: wrap;
+}
 
-  .open-calendar-event-body-organizer {
-    font-weight: bold;
-    color: red;
-  }
+.open-calendar__event-body__organizer {
+  font-weight: bold;
+  color: red;
+}
 
-  .open-calendar-event-body-attendee-chair {
-    font-weight: bold;
-  }
+.open-calendar__event-body__attendee--chair {
+  font-weight: bold;
+}
 
-  .open-calendar-event-body-attendee-req-participant {
-    font-weight: bold;
-  }
+.open-calendar__event-body__attendee--req-participant {
+  font-weight: bold;
+}
 
-  .open-calendar-event-body-attendee-non-participant {
-    font-style: italic;
-  }
+.open-calendar__event-body__attendee--non-participant {
+  font-style: italic;
+}
 
-  .open-calendar-event-body-attendee-accepted {
-    color: green;
-  }
+.open-calendar__event-body__attendee--accepted {
+  color: green;
+}
 
-  .open-calendar-event-body-attendee-declined {
-    color: gray;
-  }
+.open-calendar__event-body__attendee--declined {
+  color: gray;
 }
 
 /* NOTE - CJ - 2025-07-04 - If the partstat of the attendee is NEED-ACTION of an unknown value, set if orange */
-.open-calendar-event-body-attendees:not(.open-calendar-event-body-attendee-declined, .open-calendar-event-body-attendee-accepted) {
+.open-calendar__event-body__attendees:not(.open-calendar__event-body__attendee--declined, .open-calendar__event-body__attendee--accepted) {
   color: orange;
 }
 
 .ec-day-grid {
-  .open-calendar-event-body-header {
+  .open-calendar__event-body__header {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
   }
 
-  .open-calendar-event-body-location {
+  .open-calendar__event-body__location {
     display: none;
   }
 
-  .open-calendar-event-body-attendees {
+  .open-calendar__event-body__attendees {
     display: none;
   }
 }

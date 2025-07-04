@@ -1,4 +1,4 @@
-.open-calendar-calendar-select-container {
+.open-calendar__calendar-select__container {
   position: absolute;
   top: 100%;
   width: max-content;
@@ -14,20 +14,20 @@
   border-radius: 0.25rem;
 }
 
-.open-calendar-calendar-select-label {
+.open-calendar__calendar-select__label {
   display: flex;
   align-items: baseline;
   gap: 5px
 }
 
-.open-calendar-calendar-select-color {
+.open-calendar__calendar-select__color {
   border-radius: 50%;
   height: 0.75rem;
   width: 0.75rem;
 }
 
 /* HACK - CJ - 2025-07-03 - Added in order to make the `top: 100%` use the heigh of the parent and not of the window */
-.open-calendar-calendar-select-parent {
+.open-calendar__calendar-select__parent {
   position: relative;
 }
 
