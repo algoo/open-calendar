@@ -34,6 +34,7 @@ export class CalendarElement {
   private _client: CalendarClient
   private _selectedCalendars: Set<string>
 
+  private _target: Element | null = null
   private _calendar: EventCalendar | null = null
   private _eventBody: EventBody | null = null
   private _eventEdit: EventEditPopup | null = null
@@ -51,7 +52,7 @@ export class CalendarElement {
 
   public create = async (
     sources: (ServerSource | CalendarSource)[],
-    target: Element | Document | ShadowRoot,
+    target: Element,
     options?: CalendarOptions,
   ) => {
     if (this._calendar) return
@@ -92,8 +93,11 @@ export class CalendarElement {
     this.destroyDefaultEventBody()
   }
 
-  private createCalendar = (target: Element | Document | ShadowRoot, options?: CalendarOptions) => {
+  private createCalendar = (target: Element, options?: CalendarOptions) => {
     if (this._calendar) return
+
+    target.classList.add('open-calendar')
+    this._target = target
     this._calendar = createEventCalendar(
       target,
       [DayGrid, TimeGrid, List, Interaction],
@@ -146,8 +150,12 @@ export class CalendarElement {
   }
 
   private destroyCalendar = () => {
-    if (this._calendar) destroyEventCalendar(this._calendar)
+    if (this._calendar) {
+      this._target!.classList.remove('open-calendar')
+      destroyEventCalendar(this._calendar)
+    }
     this._calendar = null
+    this._target = null
   }
 
   private createDefaultEventEdit = (target: Node): EventEditHandlers => {

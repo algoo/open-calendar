@@ -27,11 +27,13 @@ export class CalendarSelectDropdown {
 
     if (this._container) {
       parent.removeChild(this._container)
+      parent.classList.remove('open-calendar-calendar-select-parent')
       this._container = null
       return
     }
     this._container = parseHtml<HTMLDivElement>(html, { calendars })[0]
     parent.insertBefore(this._container, target)
+    parent.classList.add('open-calendar-calendar-select-parent')
 
     const inputs = this._container.querySelectorAll<HTMLInputElement>('input')
     for (let i = 0; i < inputs.length; i++) {

@@ -12,11 +12,6 @@
       text-align: right;
     }
 
-    /* FIXME - CJ - 2025-07-03 - replace by something else that supports localization */
-    & label::after {
-      content: ":";
-    }
-
     input[type=checkbox] {
       justify-self: left;
     }
@@ -32,14 +27,19 @@
   .open-calendar-form-buttons {
     display: flex;
     gap: 1rem;
-
-    &>* {
-      flex-grow: 1;
-    }
   }
 }
 
-#open-calendar {
+/* FIXME - CJ - 2025-07-03 - replace by something else that supports localization */
+.open-calendar-form-content label::after {
+  content: ":";
+}
+
+.open-calendar-form-buttons>* {
+  flex-grow: 1;
+}
+
+.open-calendar {
   font-family: sans-serif;
   height: 100%;
 }

@@ -27,7 +27,7 @@
 }
 
 /* HACK - CJ - 2025-07-03 - Added in order to make the `top: 100%` use the heigh of the parent and not of the window */
-.ec-button-group:has(.open-calendar-calendar-select-container) {
+.open-calendar-calendar-select-parent {
   position: relative;
 }
 

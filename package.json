@@ -23,7 +23,8 @@
     "dev": "vite",
     "build": "yarn clean && webpack --progress",
     "preview": "vite preview",
-    "clean": "rimraf build dist"
+    "clean": "rimraf build dist",
+    "lint": "eslint"
   },
   "dependencies": {
     "@event-calendar/core": "^4.4.0",

@@ -5,7 +5,7 @@ import { setTranslations, type ResourceBundle} from './translations'
 
 export async function createCalendar(
   sources: (ServerSource | CalendarSource)[],
-  target: Element | Document | ShadowRoot,
+  target: Element,
   options?: CalendarOptions,
   translations?: RecursivePartial<ResourceBundle>,
 ) {

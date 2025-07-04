@@ -9,7 +9,7 @@
 }
 
 /* NOTE - CJ - 2025-07-03 - Hide the time and timezone inputs if `All day` is checked */
-.open-calendar-event-edit:has(#open-calendar-event-edit-allday:checked) .open-calendar-event-edit-not-allday {
+.open-calendar-event-edit-not-allday {
   visibility: hidden;
 }
 

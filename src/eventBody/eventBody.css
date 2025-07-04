@@ -9,6 +9,8 @@
   width: 100%;
   overflow: hidden;
   --open-calendar-event-body-gap: 2px;
+  display: flex;
+  flex-direction: column;
 }
 
 .open-calendar-event-body-time {
@@ -57,15 +59,11 @@
   .open-calendar-event-body-attendee-declined {
     color: gray;
   }
-
-  &:not(.open-calendar-event-body-attendee-declined, .open-calendar-event-body-attendee-accepted) {
-    color: orange;
-  }
-
 }
 
-.open-calendar-event-body-attendees:not(:has(*)) {
-  display: none;
+/* NOTE - CJ - 2025-07-04 - If the partstat of the attendee is NEED-ACTION of an unknown value, set if orange */
+.open-calendar-event-body-attendees:not(.open-calendar-event-body-attendee-declined, .open-calendar-event-body-attendee-accepted) {
+  color: orange;
 }
 
 .ec-day-grid {
