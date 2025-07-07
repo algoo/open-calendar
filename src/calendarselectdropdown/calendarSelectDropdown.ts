@@ -6,11 +6,11 @@ const html = /* html */`
 <div class="open-calendar-calendar-select-container open-calendar-form">
   <div class="open-calendar-form-content" >
     {{#calendars}}
-    <label class="open-calendar-calendar-select-label">
+    <label class="open-calendar-calendar-select-label" for="open-calendar__calendar-select__{{index}}">
       <span class="open-calendar-calendar-select-color" style="background-color:{{calendarColor}}"> </span>
       {{displayName}}
     </label>
-    <input type="checkbox"/>
+    <input type="checkbox" id="open-calendar__calendar-select__{{index}}"/>
     {{/calendars}}
   </div>
 </div>`
@@ -31,7 +31,9 @@ export class CalendarSelectDropdown {
       this._container = null
       return
     }
-    this._container = parseHtml<HTMLDivElement>(html, { calendars })[0]
+    this._container = parseHtml<HTMLDivElement>(html, {
+      calendars: calendars.map((calendar, index) => ({ ...calendar, index })),
+    })[0]
     parent.insertBefore(this._container, target)
     parent.classList.add('open-calendar-calendar-select-parent')
 

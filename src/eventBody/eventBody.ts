@@ -1,4 +1,4 @@
-import { parseHtml } from '../helpers/dom-helper'
+import { escapeHtml, parseHtml } from '../helpers/dom-helper'
 import type { EventBodyInfo, IcsAttendeeRoleType } from '../types'
 import Autolinker from 'autolinker'
 import { icon, library } from '@fortawesome/fontawesome-svg-core'
@@ -17,12 +17,13 @@ const html = /*html*/`
       <b>{{time}}</b>
     </div>
     <div class="open-calendar-event-body-icons">
-      {{#icons}}{{{.}}}{{/icons}}
+      {{#icons}}{{&.}}{{/icons}}
     </div>
     {{summary}}
   </div>
   {{#location}}
-  <div class="open-calendar-event-body-location">{{{location}}}</div>
+  <!-- NOTE - CJ - 2025-07-07 - location is escaped in the js as we wan to display a link -->
+  <div class="open-calendar-event-body-location">{{&location}}</div>
   {{/location}}
   <div class="open-calendar-event-body-attendees">
     {{#organizer}}
@@ -40,7 +41,7 @@ const html = /*html*/`
           open-calendar-event-body-attendee-{{partstat}}
         "
     >
-      {{{name}}}
+      {{name}}
     </span>
     {{/attendees}}
   </div>
@@ -57,7 +58,7 @@ export class EventBody {
         event.recurrenceId ? icon({ prefix: 'fas', iconName: 'repeat' }).html.join('') : undefined,
         event.alarms ? icon({ prefix: 'fas', iconName: 'bell'}, {}).html.join('') : undefined,
       ],
-      location: event.location ? Autolinker.link(event.location) : undefined,
+      location: event.location ? Autolinker.link(escapeHtml(event.location)) : undefined,
       organizer: event.organizer ? {
         name: event.organizer.name ?? event.organizer.email,
         email: event.organizer.email,
