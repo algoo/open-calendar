@@ -17,7 +17,7 @@ export class Popup {
 
     this.content = this._node.firstElementChild as HTMLDivElement
 
-    window.addEventListener('click', e => {
+    window.addEventListener('mousedown', e => {
       if (this._node.classList.contains('open-calendar-popup-hidden')) return
       if (e.target instanceof Element && (e.target === this.content || e.target.contains(this.content))) {
         this.setVisible(false)
