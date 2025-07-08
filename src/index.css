@@ -9,19 +9,19 @@
   grid-template-columns: max-content max-content;
   grid-gap: 5px;
 
-  label {
-    text-align: right;
-  }
+}
 
-  /* FIXME - CJ - 2025-07-03 - replace by something else that supports localization */
-  label::after {
-    content: ":";
-  }
+.open-calendar__form__content label {
+  text-align: right;
+}
 
-  input[type=checkbox] {
-    justify-self: left;
-  }
+/* FIXME - CJ - 2025-07-03 - replace by something else that supports localization */
+.open-calendar__form__content label::after {
+  content: ":";
+}
 
+.open-calendar__form__content input[type=checkbox] {
+  justify-self: left;
 }
 
 .open-calendar__form__list {

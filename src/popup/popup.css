@@ -1,24 +1,24 @@
 .open-calendar__popup__overlay {
-    position: fixed;
-    width: 100vw;
-    height: 100vh;
-    left: 0px;
-    top: 0px;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  left: 0px;
+  top: 0px;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
 }
 
 .open-calendar__popup--hidden {
-    display: none;
+  display: none;
 }
 
 .open-calendar__popup__frame {
-    width: fit-content;
-    height: fit-content;
-    background-color: white;
-    padding: 0.5rem;
-    border-radius: 10px;
+  width: fit-content;
+  height: fit-content;
+  background-color: white;
+  padding: 0.5rem;
+  border-radius: 10px;
 }

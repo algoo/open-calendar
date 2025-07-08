@@ -8,20 +8,15 @@
   gap: 0.25rem;
 }
 
-.open-calendar__event-edit--is-allday {
-
-  [name="start-time"],
+.open-calendar__event-edit--is-allday :is([name="start-time"],
   [name="start-timezone"],
   [name="end-time"],
-  [name="end-timezone"] {
-    visibility: hidden;
-  }
+  [name="end-timezone"]) {
+  visibility: hidden;
 }
 
-/* NOTE - CJ - 2025-07-03 - Hide the `Delete` button we are creating an event */
-.open-calendar__event-edit--create {
 
-  [name="delete"] {
-    visibility: hidden;
-  }
+/* NOTE - CJ - 2025-07-03 - Hide the `Delete` button we are creating an event */
+.open-calendar__event-edit--create [name="delete"] {
+  visibility: hidden;
 }

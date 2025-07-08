@@ -66,18 +66,12 @@
   color: orange;
 }
 
-.ec-day-grid {
-  .open-calendar__event-body__header {
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-  }
+.ec-day-grid .open-calendar__event-body__header {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
 
-  .open-calendar__event-body__location {
-    display: none;
-  }
-
-  .open-calendar__event-body__attendees {
-    display: none;
-  }
+.ec-day-grid :is(.open-calendar__event-body__location, .open-calendar__event-body__attendees) {
+  display: none;
 }
