@@ -1,6 +1,6 @@
 import { convertIcsRecurrenceRule, getEventEndFromDuration, type IcsAttendee, type IcsDateObject, type IcsEvent } from 'ts-ics'
 import './eventEditPopup.css'
-import { attendeeRoleTypes, namedRRules, type Calendar, type EventEditCallback, type EventEditCreateInfo, type EventEditDeleteInfo, type EventEditUpdateInfo } from '../types'
+import { attendeeRoleTypes, namedRRules, type Calendar, type DomEvent, type EventEditCallback, type EventEditCreateInfo, type EventEditDeleteInfo, type EventEditUpdateInfo } from '../types'
 import { Popup } from '../popup/popup'
 import { parseHtml } from '../helpers/dom-helper'
 import { getRRuleString, isEventAllDay, offsetDate } from '../helpers/ics-helper'
@@ -9,60 +9,60 @@ import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
 
 const html = /*html*/`
-<form name="event" class="open-calendar-event-edit open-calendar-form">
-  <div class="open-calendar-form-content">
-    <label for="open-calendar-event-edit-calendar">{{t.calendar}}</label>
-    <select id="open-calendar-event-edit-calendar" name="calendar" required="">
+<form name="event" class="open-calendar__event-edit open-calendar__form">
+  <div class="open-calendar__form__content">
+    <label for="open-calendar__event-edit__calendar">{{t.calendar}}</label>
+    <select id="open-calendar__event-edit__calendar" name="calendar" required="">
 
     </select>
-    <label for="open-calendar-event-edit-summary">{{t.title}}</label>
-    <input type="text" id="open-calendar-event-edit-summary" name="summary" required="" />
-    <label for="open-calendar-event-edit-location">{{t.location}}</label>
-    <input type="text" id="open-calendar-event-edit-location" name="location" />
-    <label for="open-calendar-event-edit-allday">{{t.allDay}}</label>
-    <input type="checkbox" id="open-calendar-event-edit-allday" name="allday" />
-    <label for="open-calendar-event-edit-start">{{t.start}}</label>
-    <div id="open-calendar-event-edit-start" class="open-calendar-event-edit-datetime">
+    <label for="open-calendar__event-edit__summary">{{t.title}}</label>
+    <input type="text" id="open-calendar__event-edit__summary" name="summary" required="" />
+    <label for="open-calendar__event-edit__location">{{t.location}}</label>
+    <input type="text" id="open-calendar__event-edit__location" name="location" />
+    <label for="open-calendar__event-edit__allday">{{t.allDay}}</label>
+    <input type="checkbox" id="open-calendar__event-edit__allday" name="allday" />
+    <label for="open-calendar__event-edit__start">{{t.start}}</label>
+    <div id="open-calendar__event-edit__start" class="open-calendar__event-edit__datetime">
       <input type="date" name="start-date" required="" />
-      <input type="time" name="start-time" class="open-calendar-event-edit-not-allday" required="" />
-      <select name="start-timezone" class="open-calendar-event-edit-not-allday" required="">
+      <input type="time" name="start-time" required="" />
+      <select name="start-timezone" required="">
         {{#timezones}}
           <option value="{{.}}">{{.}}</option>
         {{/timezones}}
         </select>
     </div>
-    <label for="open-calendar-event-edit-end">{{t.end}}</label>
-    <div id="open-calendar-event-edit-end" class="open-calendar-event-edit-datetime">
+    <label for="open-calendar__event-edit__end">{{t.end}}</label>
+    <div id="open-calendar__event-edit__end" class="open-calendar__event-edit__datetime">
       <input type="date" name="end-date" required="" />
-      <input type="time" name="end-time" class="open-calendar-event-edit-not-allday" required="" />
-      <select name="end-timezone" class="open-calendar-event-edit-not-allday" required="">
+      <input type="time" name="end-time" required="" />
+      <select name="end-timezone" required="">
         {{#timezones}}
           <option value="{{.}}">{{.}}</option>
         {{/timezones}}
       </select>
     </div>
-    <label for="open-calendar-event-edit-organizer">{{t.organizer}}</label>
-    <div id="open-calendar-event-edit-organizer" class="open-calendar-event-edit-attendee">
+    <label for="open-calendar__event-edit__organizer">{{t.organizer}}</label>
+    <div id="open-calendar__event-edit__organizer" class="open-calendar__event-edit__attendee">
         <input type="email" name="email-organizer" placeholder="{{t.email}}" />
         <input type="text" name="name-organizer" placeholder="{{t.name}}" />
     </div>
-    <label for="open-calendar-event-edit-attendees">{{t.attendees}}</label>
-    <div id="open-calendar-event-edit-attendees" >
-        <div class="open-calendar-form-list"> </div>
+    <label for="open-calendar__event-edit__attendees">{{t.attendees}}</label>
+    <div id="open-calendar__event-edit__attendees" class="open-calendar__event-edit__attendees" >
+        <div class="open-calendar__form__list"> </div>
         <button type="button">{{t.addAttendee}}</button>
     </div>
-    <label for="open-calendar-event-edit-rrule">{{t.rrule}}</label>
-    <select id="open-calendar-event-edit-rrule" name="rrule">
+    <label for="open-calendar__event-edit__rrule">{{t.rrule}}</label>
+    <select id="open-calendar__event-edit__rrule" name="rrule">
       <option value="">{{trrules.none}}</option>
       {{#rrules}}
       <option value="{{rule}}">{{label}}</option>
       {{/rrules}}
-      <option id="open-calendar-event-edit-rrule-unchanged" value="">{{trrules.unchanged}}</option>
+      <option class="open-calendar__event-edit__rrule__unchanged" value="">{{trrules.unchanged}}</option>
     </select>
-    <label for="open-calendar-event-edit-description">{{t.description}}</label>
-    <textarea id="open-calendar-event-edit-description" name="description"> </textarea>
+    <label for="open-calendar__event-edit__description">{{t.description}}</label>
+    <textarea id="open-calendar__event-edit__description" name="description"> </textarea>
   </div>
-  <div class="open-calendar-form-buttons">
+  <div class="open-calendar__form__buttons">
     <button name="delete" type="button">{{t.delete}}</button>
     <button name="cancel" type="button">{{t.cancel}}</button>
     <button name="submit" type="submit">{{t.save}}</button>
@@ -76,7 +76,7 @@ const calendarsHtml = /*html*/`
 {{/calendars}}`
 
 const attendeeHtml = /*html*/`
-<div class="open-calendar-event-edit-attendee">
+<div class="open-calendar__event-edit__attendee">
   <input type="email" name="email" placeholder="{{t.email}}" required value="{{email}}"/>
   <input type="name" name="name" placeholder="{{t.name}}" value="{{name}}"/>
   <select name="role" value="{{role}}" required>
@@ -115,16 +115,18 @@ export class EventEditPopup {
     })[0]
     this._popup.content.appendChild(this._form)
 
-    this._calendar = this._form.querySelector<HTMLSelectElement>('#open-calendar-event-edit-calendar')!
+    this._calendar = this._form.querySelector<HTMLSelectElement>('.open-calendar__form__content [name="calendar"]')!
     this._attendees = this._form.querySelector<HTMLDivElement>(
-      '#open-calendar-event-edit-attendees > .open-calendar-form-list',
+      '.open-calendar__event-edit__attendees > .open-calendar__form__list',
     )!
-    const addAttendee = this._form.querySelector<HTMLDivElement>('#open-calendar-event-edit-attendees > button')!
-    const cancel = this._form.querySelector<HTMLButtonElement>('.open-calendar-form-buttons [name="cancel"]')!
-    const remove = this._form.querySelector<HTMLButtonElement>('.open-calendar-form-buttons [name="delete"]')!
-    this._rruleUnchanged = this._form.querySelector<HTMLOptionElement>('#open-calendar-event-edit-rrule-unchanged')!
+    const allday = this._form.querySelector<HTMLButtonElement>('.open-calendar__event-edit [name="allday"]')!
+    const addAttendee = this._form.querySelector<HTMLDivElement>('.open-calendar__event-edit__attendees > button')!
+    this._rruleUnchanged = this._form.querySelector<HTMLOptionElement>('.open-calendar__event-edit__rrule__unchanged')!
+    const cancel = this._form.querySelector<HTMLButtonElement>('.open-calendar__form__buttons [name="cancel"]')!
+    const remove = this._form.querySelector<HTMLButtonElement>('.open-calendar__form__buttons [name="delete"]')!
 
     this._form.addEventListener('submit', async (e) => { e.preventDefault(); await this.save() })
+    allday.addEventListener('click', this.updateAllday)
     addAttendee.addEventListener('click', () => this.addAttendee({ email: '' }))
     cancel.addEventListener('click', this.cancel)
     remove.addEventListener('click', this.delete)
@@ -141,6 +143,10 @@ export class EventEditPopup {
     })
     this._calendar.innerHTML = ''
     this._calendar.append(...Array.from(calendarElements))
+  }
+
+  private updateAllday = (e: DomEvent) => {
+    this._form.classList.toggle('open-calendar__event-edit--is-allday', (e.target as HTMLInputElement).checked)
   }
 
   private addAttendee = (attendee: IcsAttendee) => {
@@ -160,7 +166,7 @@ export class EventEditPopup {
   }
 
   public onCreate = ({calendars, event, handleCreate}: EventEditCreateInfo) => {
-    this._form.classList.toggle('open-calendar-event-edit-create', true)
+    this._form.classList.toggle('open-calendar__event-edit--create', true)
     this._handleSave = handleCreate
     this._handleDelete = null
     this.open('', event, calendars)
@@ -173,7 +179,7 @@ export class EventEditPopup {
     handleDelete,
     handleUpdate,
   }: EventEditUpdateInfo) => {
-    this._form.classList.toggle('open-calendar-event-edit-create', false)
+    this._form.classList.toggle('open-calendar__event-edit--create', false)
     this._handleSave = handleUpdate
     this._handleDelete = handleDelete
     if (!recurringEvent) this.open(calendarUrl, event, calendars)
@@ -203,10 +209,11 @@ export class EventEditPopup {
     (inputs.namedItem('calendar') as HTMLInputElement).disabled = event.recurrenceId !== undefined;
     // FIXME - CJ - 2025/06/03 - changing an object of calendar is not supported;
     (inputs.namedItem('calendar') as HTMLInputElement).disabled ||=
-      !this._form.classList.contains('open-calendar-event-edit-create');
+      !this._form.classList.contains('open-calendar__event-edit--create');
     (inputs.namedItem('summary') as HTMLInputElement).value = event.summary ?? '';
     (inputs.namedItem('location') as HTMLInputElement).value = event.location ?? '';
     (inputs.namedItem('allday') as HTMLInputElement).checked = isEventAllDay(event)
+    this._form.classList.toggle('open-calendar__event-edit--is-allday', isEventAllDay(event))
     const startDateTime = localStart.date.toISOString().split('T');
     (inputs.namedItem('start-date') as HTMLInputElement).value = startDateTime[0];
     (inputs.namedItem('start-time') as HTMLInputElement).value = startDateTime[1].slice(0, 5);

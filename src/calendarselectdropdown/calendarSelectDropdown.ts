@@ -3,11 +3,11 @@ import type { SelectCalendarsClickInfo } from '../types'
 import './calendarSelectDropdown.css'
 
 const html = /* html */`
-<div class="open-calendar-calendar-select-container open-calendar-form">
-  <div class="open-calendar-form-content" >
+<div class="open-calendar__calendar-select__container open-calendar__form">
+  <div class="open-calendar__form__content" >
     {{#calendars}}
-    <label class="open-calendar-calendar-select-label">
-      <span class="open-calendar-calendar-select-color" style="background-color:{{calendarColor}}"> </span>
+    <label class="open-calendar__calendar-select__label">
+      <span class="open-calendar__calendar-select__color" style="background-color:{{calendarColor}}"> </span>
       {{displayName}}
     </label>
     <input type="checkbox"/>
@@ -27,13 +27,13 @@ export class CalendarSelectDropdown {
 
     if (this._container) {
       parent.removeChild(this._container)
-      parent.classList.remove('open-calendar-calendar-select-parent')
+      parent.classList.remove('open-calendar__calendar-select__parent')
       this._container = null
       return
     }
     this._container = parseHtml<HTMLDivElement>(html, { calendars })[0]
     parent.insertBefore(this._container, target)
-    parent.classList.add('open-calendar-calendar-select-parent')
+    parent.classList.add('open-calendar__calendar-select__parent')
 
     const inputs = this._container.querySelectorAll<HTMLInputElement>('input')
     for (let i = 0; i < inputs.length; i++) {
