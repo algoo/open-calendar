@@ -11,25 +11,25 @@ import { getTranslations } from '../translations'
 library.add(faRepeat, faBell)
 
 const html = /*html*/`
-<div class="open-calendar-event-body">
-  <div class="open-calendar-event-body-header">
-    <div class="open-calendar-event-body-time">
+<div class="open-calendar__event-body">
+  <div class="open-calendar__event-body__header">
+    <div class="open-calendar__event-body__time">
       <b>{{time}}</b>
     </div>
-    <div class="open-calendar-event-body-icons">
+    <div class="open-calendar__event-body__icons">
       {{#icons}}{{&.}}{{/icons}}
     </div>
     {{summary}}
   </div>
   {{#location}}
   <!-- NOTE - CJ - 2025-07-07 - location is escaped in the js as we wan to display a link -->
-  <div class="open-calendar-event-body-location">{{&location}}</div>
+  <div class="open-calendar__event-body__location">{{&location}}</div>
   {{/location}}
-  <div class="open-calendar-event-body-attendees">
+  <div class="open-calendar__event-body__attendees">
     {{#organizer}}
     <span
         title="{{name}} <{{email}}>\n{{t.organizer}}"
-        class="open-calendar-event-body-organizer">
+        class="open-calendar__event-body__organizer">
       {{name}}
     </span>
     {{/organizer}}
@@ -37,8 +37,8 @@ const html = /*html*/`
     <span
         title="{{name}} <{{email}}>\n{{tRole}}\n{{tPartstat}}"
         class="
-          open-calendar-event-body-attendee open-calendar-event-body-attendee-{{role}}
-          open-calendar-event-body-attendee-{{partstat}}
+          open-calendar__event-body__attendee open-calendar__event-body__attendee--{{role}}
+          open-calendar__event-body__attendee--{{partstat}}
         "
     >
       {{name}}

@@ -2,7 +2,7 @@ const path = require('path')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 const DtsBundleWebpack = require('dts-bundle-webpack')
 const isProduction = process.env.NODE_ENV === 'production' || true
-const name = 'open-calendar'
+const name = 'open-dav-calendar'
 
 module.exports = {
   mode: isProduction ? 'production' : 'development',
