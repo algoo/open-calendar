@@ -27,7 +27,7 @@ Documentation for the API as well as examples can be found **Insert documentatio
 
 First, install Open Calendar with the package manager of your choice (`yarn` in this case):
 ```bash
-yarn add open-calendar
+yarn add open-dav-calendar
 ```
 
 Once this is done, you can add Open Calendar to your application at different levels: 
