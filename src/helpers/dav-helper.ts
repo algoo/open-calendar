@@ -4,6 +4,12 @@ import { createAccount, fetchCalendars as davFetchCalendars, fetchCalendarObject
 import type { CalendarSource, ServerSource, Calendar, CalendarObject, CalendarResponse } from '../types'
 import { isServerSource } from './types-helper'
 
+
+// HACK - CJ - 2025-07-09 - resolve the issue in Radicale of ts-ics directly (https://github.com/algoo/open-calendar/issues/1)
+function fixAlldayRecurringDate(ics: string) {
+  return ics.replace(/^(DTSTART|DTEND|RECURRENCE-ID):([0-9]{8})$/gm, '$1;VALUE=DATE:$2')
+}
+
 export async function fetchCalendars(source: ServerSource | CalendarSource): Promise<Calendar[]> {
   if (isServerSource(source)) {
     const account = await createAccount({
@@ -37,7 +43,7 @@ export async function fetchCalendarObjects(
   const calendarObjects = davCalendarObjects.map(o => ({
     url: o.url,
     etag: o.etag,
-    data: convertIcsCalendar(undefined, o.data),
+    data: convertIcsCalendar(undefined, fixAlldayRecurringDate(o.data)),
     calendarUrl: calendar.url,
   }))
   const recurringObjectsUrls = new Set(
