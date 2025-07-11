@@ -224,7 +224,9 @@ export class CalendarElement {
   }
 
   private getEventContent = ({ event, view }: EventCalendar.EventContentInfo): EventCalendar.Content => {
-    const calendarEvent = this._client.getCalendarEvent(event.extendedProps as EventUid)!
+    const calendarEvent = this._client.getCalendarEvent(event.extendedProps as EventUid)
+    // NOTE - CJ - 2025-11-07 - calendarEvent can be undefined when creating events
+    if (calendarEvent === undefined) return {html: ''}
     const calendar = this._client.getCalendarByUrl(calendarEvent.calendarUrl)!
     return {
       domNodes: this._bodyHandlers!.getEventBody({
