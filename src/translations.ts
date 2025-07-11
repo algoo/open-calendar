@@ -33,9 +33,7 @@ const en = {
     'cancel': 'Cancel',
     'save': 'Save',
     'chooseACalendar': '-- Choose a calendar --',
-    'email': 'email',
     'rrule': 'Frequency',
-    'name': 'name',
   },
   'eventBody': {
     'organizer': 'Organizer',

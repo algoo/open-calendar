@@ -7,6 +7,11 @@ export type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>
 }
 
+export type Contact = {
+  email: string
+  name?: string
+}
+
 // TODO - CJ - 2025-07-03 - add <TCalendarUid = any> generic
 // TODO - CJ - 2025-07-03 - add options to support IcsEvent custom props
 export type Calendar = DAVCalendar & {
@@ -74,6 +79,10 @@ export type CalendarSource = {
   fetchOptions?: RequestInit
 }
 
+export type AddressBookFn = {
+  fetchContacts: () => Promise<Contact[]>
+}
+
 export type SelectedCalendar = {
   url: string
   selected: boolean
@@ -114,6 +123,7 @@ export type EventEditCreateInfo = {
   jsEvent: DomEvent
   event: IcsEvent
   calendars: Calendar[]
+  contacts: Contact[]
   handleCreate: EventEditCallback
 }
 export type EventEditUpdateInfo = {
@@ -122,6 +132,7 @@ export type EventEditUpdateInfo = {
   event: IcsEvent
   recurringEvent?: IcsEvent
   calendars: Calendar[]
+  contacts: Contact[]
   handleUpdate: EventEditCallback
   handleDelete: EventEditCallback
 }

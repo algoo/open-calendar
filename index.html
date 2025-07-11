@@ -10,15 +10,18 @@
 <body style="height: 100vh; margin:0; padding: 5px; box-sizing: border-box;">
   <div id="open-calendar"></div>
   <script type="module">
-    import { getBasicAuthHeaders } from "tsdav";
-    import { createCalendar } from "./src";
+    import { getBasicAuthHeaders } from 'tsdav';
+    import { createCalendar } from './src';
 
     // TODO - CJ - 2025--03-07 - Add a proper login form and ask for the server path
-    const username = window.prompt("username")
-    const password = window.prompt("password")
+    const username = window.prompt('username')
+    const password = window.prompt('password')
     createCalendar(
-      [{ serverUrl: "http://localhost:5232", headers: getBasicAuthHeaders({ username, password }) }],
-      document.getElementById("open-calendar"),
+      [{ serverUrl: 'http://localhost:5232', headers: getBasicAuthHeaders({ username, password }) }],
+      [{
+        fetchContacts: async () => await new Promise(resolve => resolve([{ name: 'Some one', email: 'some.one@some.thing' }]))
+      }],
+      document.getElementById('open-calendar'),
     )
   </script>
 </body>

@@ -4,7 +4,7 @@ import '@event-calendar/core/index.css'
 import { getEventEnd, type IcsEvent } from 'ts-ics'
 import { EventEditPopup } from '../eventeditpopup/eventEditPopup'
 import { hasCalendarHandlers, hasEventHandlers } from '../helpers/types-helper'
-import type { CalendarOptions, CalendarSource, ServerSource, EventUid, EventEditHandlers, CalendarEvent, EventChangeHandlers, SelectCalendarHandlers, SelectedCalendar, View, BodyHandlers, EventBodyInfo, DomEvent } from '../types'
+import type { CalendarOptions, CalendarSource, ServerSource, EventUid, EventEditHandlers, CalendarEvent, EventChangeHandlers, SelectCalendarHandlers, SelectedCalendar, View, BodyHandlers, EventBodyInfo, DomEvent, AddressBookFn } from '../types'
 import { isEventAllDay, offsetDate } from '../helpers/ics-helper'
 import './calendarElement.css'
 import { CalendarSelectDropdown } from '../calendarselectdropdown/calendarSelectDropdown'
@@ -51,12 +51,16 @@ export class CalendarElement {
   }
 
   public create = async (
-    sources: (ServerSource | CalendarSource)[],
+    calDavSources: (ServerSource | CalendarSource)[],
+    cardDavSources: (AddressBookFn)[],
     target: Element,
     options?: CalendarOptions,
   ) => {
     if (this._calendar) return
-    await this._client.loadCalendars(sources)
+    await Promise.all([
+      this._client.loadCalendars(calDavSources),
+      this._client.loadAddressBooks(cardDavSources),
+    ])
     this._selectedCalendars = new Set(this._client.getCalendars().map(c => c.url))
 
     this._eventEditHandlers = options && hasEventHandlers(options)
@@ -194,7 +198,10 @@ export class CalendarElement {
   }
 
   private fetchAndLoadEvents = async (info: EventCalendar.FetchInfo): Promise<EventCalendar.EventInput[]> => {
-    const calendarEvents = await this._client.fetchAndLoadEvents(info.startStr, info.endStr)
+    const [calendarEvents] = await Promise.all([
+      this._client.fetchAndLoadEvents(info.startStr, info.endStr),
+      this._client.fetchAndLoadContacts(),
+    ])
     return calendarEvents.map(({ event, calendarUrl }) => {
       const allDay = isEventAllDay(event)
       return {
@@ -282,6 +289,7 @@ export class CalendarElement {
       jsEvent,
       calendars: this._client.getCalendars(),
       event: newEvent,
+      contacts: this._client.getContacts(),
       handleCreate: this.handleCreateEvent,
     })
   }
@@ -312,6 +320,7 @@ export class CalendarElement {
     this._eventEditHandlers!.onUpdateEvent({
       jsEvent,
       calendars: this._client.getCalendars(),
+      contacts: this._client.getContacts(),
       ...calendarEvent,
       handleUpdate: this.handleUpdateEvent,
       handleDelete: this.handleDeleteEvent,

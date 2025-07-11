@@ -1,6 +1,6 @@
 import { type IcsCalendar, type IcsEvent } from 'ts-ics'
 import { createCalendarObject, deleteCalendarObject, fetchCalendarObjects, fetchCalendars, updateCalendarObject } from './helpers/dav-helper'
-import type { CalendarSource, ServerSource, Calendar, CalendarObject, EventUid, CalendarEvent, DisplayedCalendarEvent } from './types'
+import type { CalendarSource, ServerSource, Calendar, CalendarObject, EventUid, CalendarEvent, DisplayedCalendarEvent, Contact, AddressBookFn as AddressBookFn } from './types'
 import { isRRuleSourceEvent, isSameEvent, offsetDate } from './helpers/ics-helper'
 
 export class CalendarClient {
@@ -9,10 +9,19 @@ export class CalendarClient {
   private _calendarObjectsPerCalendar: CalendarObject[][] = []
   private _recurringObjectsPerCalendar: CalendarObject[][] = []
 
+  private _addressBooks: AddressBookFn[] = []
+  private _contacts: Contact[] = []
+
   public loadCalendars = async (sources: (ServerSource | CalendarSource)[]) => {
     const calendarsPerSource = await Promise.all(sources.map(source => fetchCalendars(source)))
     this._calendars = calendarsPerSource.flat()
     this._calendarObjectsPerCalendar = this._calendars.map(() => [])
+  }
+
+  public getCalendars = () => this._calendars
+
+  public getCalendarByUrl = (url: string): Calendar | undefined => {
+    return this._calendars.find(c => c.url === url)
   }
 
   public fetchAndLoadEvents = async (start: string, end: string): Promise<CalendarEvent[]> => {
@@ -27,8 +36,6 @@ export class CalendarClient {
         .map(event => ({ event: event, calendarUrl: cos[0].calendarUrl })))
   }
 
-  public getCalendars = () => this._calendars
-
   public getCalendarEvent = (uid: EventUid): DisplayedCalendarEvent | undefined => {
     for (const calendarObject of this._calendarObjectsPerCalendar.flat()) {
       for (const event of calendarObject.data.events ?? []) {
@@ -41,6 +48,20 @@ export class CalendarClient {
     }
     return undefined
   }
+
+  public loadAddressBooks = async (sources: AddressBookFn[]) => {
+    this._addressBooks = sources
+  }
+
+  public fetchAndLoadContacts = async (): Promise<Contact[]> => {
+    const allObjects = await Promise.all(
+      this._addressBooks.map(addressBook => addressBook.fetchContacts()),
+    )
+    this._contacts = allObjects.flat()
+    return this._contacts
+  }
+
+  public getContacts = () => this._contacts
 
   private getCalendarObject = (uid: IcsEvent): CalendarObject | undefined => {
     for (const calendarObject of this._calendarObjectsPerCalendar.flat()) {
@@ -62,9 +83,6 @@ export class CalendarClient {
     return undefined
   }
 
-  public getCalendarByUrl = (url: string): Calendar | undefined => {
-    return this._calendars.find(c => c.url === url)
-  }
 
   public createEvent = async ({ calendarUrl, event }: CalendarEvent) => {
     const calendar = this.getCalendarByUrl(calendarUrl)
