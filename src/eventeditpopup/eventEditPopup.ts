@@ -195,14 +195,21 @@ export class EventEditPopup {
 
     this._calendarUrl = calendarUrl
     this._event = event
-
-    const localStart = event.start.local ?? { date: event.start.date, timezone: 'UTC', tzoffset: '+0000' }
+    const localTzid = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const localTzoffset = new Date().getTimezoneOffset() * 60 * 1000
+    const localStart = event.start.local ?? {
+      date: new Date(event.start.date.getTime() - localTzoffset),
+      timezone: localTzid,
+    }
     const end = event.end ??
       offsetDate(
         localStart,
         getEventEndFromDuration(event.start.date, event.duration).getTime() - event.start.date.getTime(),
       )
-    const localEnd = end.local ?? { date: end.date, timezone: 'UTC', tzoffset: '+0000' }
+    const localEnd = end.local ?? {
+      date: new Date(end.date.getTime() - localTzoffset),
+      timezone: localTzid,
+    }
 
     const inputs = this._form.elements;
     (inputs.namedItem('calendar') as HTMLInputElement).value = calendarUrl;
