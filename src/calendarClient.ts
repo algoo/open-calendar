@@ -8,6 +8,7 @@ export class CalendarClient {
   private _calendars: Calendar[] = []
   private _calendarObjectsPerCalendar: CalendarObject[][] = []
   private _recurringObjectsPerCalendar: CalendarObject[][] = []
+  private _fetchCount = 0
 
   public loadCalendars = async (sources: (ServerSource | CalendarSource)[]) => {
     const calendarsPerSource = await Promise.all(sources.map(source => fetchCalendars(source)))
@@ -16,18 +17,26 @@ export class CalendarClient {
   }
 
   public fetchAndLoadEvents = async (start: string, end: string): Promise<CalendarEvent[]> => {
+    this._fetchCount++
+    const currentCount = this._fetchCount
     const allObjects = await Promise.all(
       this._calendars.map(calendar => fetchCalendarObjects(calendar, { start, end }, true)),
     )
-    this._calendarObjectsPerCalendar = allObjects.map(objs => objs.calendarObjects)
-    this._recurringObjectsPerCalendar = allObjects.map(objs => objs.recurringObjects)
-    return this._calendarObjectsPerCalendar.flatMap(cos =>
-      cos
-        .flatMap(co => co.data.events ?? [])
-        .map(event => ({ event: event, calendarUrl: cos[0].calendarUrl })))
+    // NOTE - CJ - 2025-07-15 - only update the objects if this is the latest fetch
+    // This can happen if this fetch took more time than the last one
+    if (this._fetchCount === currentCount) {
+      this._calendarObjectsPerCalendar = allObjects.map(objs => objs.calendarObjects)
+      this._recurringObjectsPerCalendar = allObjects.map(objs => objs.recurringObjects)
+    }
+    return this.getCalendarObjects()
   }
 
   public getCalendars = () => this._calendars
+
+  public getCalendarObjects = () => this._calendarObjectsPerCalendar.flatMap(cos =>
+    cos
+      .flatMap(co => co.data.events ?? [])
+      .map(event => ({ event: event, calendarUrl: cos[0].calendarUrl })))
 
   public getCalendarEvent = (uid: EventUid): DisplayedCalendarEvent | undefined => {
     for (const calendarObject of this._calendarObjectsPerCalendar.flat()) {
