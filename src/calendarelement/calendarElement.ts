@@ -12,7 +12,7 @@ import { faRefresh } from '@fortawesome/free-solid-svg-icons'
 import { CalendarClient } from '../calendarClient'
 import { getTranslations } from '../translations'
 import { EventBody } from '../eventBody/eventBody'
-import type { AddressBookFn, BodyHandlers, CalendarOptions, CalendarSource, DomEvent, EventBodyInfo, EventChangeHandlers, EventEditHandlers, SelectCalendarHandlers, SelectedCalendar, ServerSource, View } from '../types/options'
+import type { AddressBookSource, BodyHandlers, CalendarOptions, CalendarSource, DomEvent, EventBodyInfo, EventChangeHandlers, EventEditHandlers, SelectCalendarHandlers, SelectedCalendar, ServerSource, View } from '../types/options'
 import type { CalendarEvent, EventUid } from '../types/calendar'
 
 library.add(faRefresh)
@@ -52,15 +52,15 @@ export class CalendarElement {
   }
 
   public create = async (
-    calDavSources: (ServerSource | CalendarSource)[],
-    cardDavSources: (AddressBookFn)[],
+    calendarSources: (ServerSource | CalendarSource)[],
+    addressBookSources: (ServerSource | AddressBookSource)[],
     target: Element,
     options?: CalendarOptions,
   ) => {
     if (this._calendar) return
     await Promise.all([
-      this._client.loadCalendars(calDavSources),
-      this._client.loadAddressBooks(cardDavSources),
+      this._client.loadCalendars(calendarSources),
+      this._client.loadAddressBooks(addressBookSources),
     ])
     this._selectedCalendars = new Set(this._client.getCalendars().map(c => c.url))
 

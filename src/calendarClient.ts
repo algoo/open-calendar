@@ -1,9 +1,9 @@
 import { type IcsCalendar, type IcsEvent } from 'ts-ics'
-import { createCalendarObject, deleteCalendarObject, fetchCalendarObjects, fetchCalendars, updateCalendarObject } from './helpers/dav-helper'
+import { createCalendarObject, deleteCalendarObject, fetchAddressBooks, fetchCalendarObjects, fetchCalendars, fetchVCards, updateCalendarObject } from './helpers/dav-helper'
 import { isRRuleSourceEvent, isSameEvent, offsetDate } from './helpers/ics-helper'
-import type { CalendarSource, ServerSource, AddressBookFn as AddressBookFn } from './types/options'
+import type { CalendarSource, ServerSource, AddressBookSource } from './types/options'
 import type { Calendar, CalendarEvent, CalendarObject, DisplayedCalendarEvent, EventUid } from './types/calendar'
-import type { Contact } from './types/addressbook'
+import type { AddressBook, AddressBookContact, VCard } from './types/addressbook'
 
 export class CalendarClient {
 
@@ -11,8 +11,8 @@ export class CalendarClient {
   private _calendarObjectsPerCalendar: CalendarObject[][] = []
   private _recurringObjectsPerCalendar: CalendarObject[][] = []
 
-  private _addressBooks: AddressBookFn[] = []
-  private _contacts: Contact[] = []
+  private _addressBooks: AddressBook[] = []
+  private _vCardsPerAddressBook: VCard[][] = []
 
   public loadCalendars = async (sources: (ServerSource | CalendarSource)[]) => {
     const calendarsPerSource = await Promise.all(sources.map(source => fetchCalendars(source)))
@@ -35,7 +35,7 @@ export class CalendarClient {
     return this._calendarObjectsPerCalendar.flatMap(cos =>
       cos
         .flatMap(co => co.data.events ?? [])
-        .map(event => ({ event: event, calendarUrl: cos[0].calendarUrl })))
+        .map(event => ({ event, calendarUrl: cos[0].calendarUrl })))
   }
 
   public getCalendarEvent = (uid: EventUid): DisplayedCalendarEvent | undefined => {
@@ -51,19 +51,24 @@ export class CalendarClient {
     return undefined
   }
 
-  public loadAddressBooks = async (sources: AddressBookFn[]) => {
-    this._addressBooks = sources
+  public loadAddressBooks = async (sources: (ServerSource | AddressBookSource)[]) => {
+    const addressBooksPerSources = await Promise.all(sources.map(source => fetchAddressBooks(source)))
+    this._addressBooks = addressBooksPerSources.flat()
+    this._vCardsPerAddressBook = this._addressBooks.map(() => [])
   }
 
-  public fetchAndLoadContacts = async (): Promise<Contact[]> => {
-    const allObjects = await Promise.all(
-      this._addressBooks.map(addressBook => addressBook.fetchContacts()),
+  public fetchAndLoadContacts = async (): Promise<AddressBookContact[]> => {
+    const vCards = await Promise.all(
+      this._addressBooks.map(book => fetchVCards(book)),
     )
-    this._contacts = allObjects.flat()
-    return this._contacts
+    this._vCardsPerAddressBook = vCards
+    return this.getContacts()
   }
 
-  public getContacts = () => this._contacts
+  public getContacts = (): AddressBookContact[] => this._vCardsPerAddressBook.flatMap(vCards =>
+    vCards
+      .flatMap(vCard => vCard.data.contacts ?? [])
+      .map(contact => ({ contact, addressBookUrl: vCards[0].addressBookUrl })))
 
   private getCalendarObject = (uid: IcsEvent): CalendarObject | undefined => {
     for (const calendarObject of this._calendarObjectsPerCalendar.flat()) {

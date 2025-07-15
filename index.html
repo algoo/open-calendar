@@ -18,9 +18,7 @@
     const password = window.prompt('password')
     createCalendar(
       [{ serverUrl: 'http://localhost:5232', headers: getBasicAuthHeaders({ username, password }) }],
-      [{
-        fetchContacts: async () => await new Promise(resolve => resolve([{ name: 'Some one', email: 'some.one@some.thing' }]))
-      }],
+      [{ serverUrl: 'http://localhost:5232', headers: getBasicAuthHeaders({ username, password }) }],
       document.getElementById('open-calendar'),
     )
   </script>

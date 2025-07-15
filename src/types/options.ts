@@ -1,6 +1,6 @@
 import type { IcsEvent } from 'ts-ics'
 import type { Calendar, CalendarEvent } from './calendar'
-import type { Contact } from './addressbook'
+import type { AddressBookContact } from './addressbook'
 import type { attendeeRoleTypes, availableViews } from '../contants'
 
 export type RecursivePartial<T> = {
@@ -22,8 +22,11 @@ export type CalendarSource = {
   fetchOptions?: RequestInit
 }
 
-export type AddressBookFn = {
-  fetchContacts: () => Promise<Contact[]>
+export type AddressBookSource = {
+  addressBookUrl: string
+  addressBookUid?: unknown
+  headers?: Record<string, string>
+  fetchOptions?: RequestInit
 }
 
 export type View = typeof availableViews[number]
@@ -61,7 +64,7 @@ export type EventEditCreateInfo = {
   jsEvent: DomEvent
   event: IcsEvent
   calendars: Calendar[]
-  contacts: Contact[]
+  contacts: AddressBookContact[]
   handleCreate: EventEditCallback
 }
 export type EventEditUpdateInfo = {
@@ -70,7 +73,7 @@ export type EventEditUpdateInfo = {
   event: IcsEvent
   recurringEvent?: IcsEvent
   calendars: Calendar[]
-  contacts: Contact[]
+  contacts: AddressBookContact[]
   handleUpdate: EventEditCallback
   handleDelete: EventEditCallback
 }

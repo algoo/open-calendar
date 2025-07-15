@@ -1,9 +1,10 @@
 import { tzlib_get_ical_block } from 'timezones-ical-library'
 import { convertIcsCalendar, convertIcsTimezone, generateIcsCalendar, type IcsCalendar } from 'ts-ics'
-import { createAccount, fetchCalendars as davFetchCalendars, fetchCalendarObjects as davFetchCalendarObjects, createCalendarObject as davCreateCalendarObject, updateCalendarObject as davUpdateCalendarObject, deleteCalendarObject as davDeleteCalendarObject, DAVNamespaceShort, propfind, type DAVCalendar, type DAVCalendarObject } from 'tsdav'
+import { createAccount, fetchAddressBooks as davFetchAddressBooks, fetchCalendars as davFetchCalendars, fetchCalendarObjects as davFetchCalendarObjects, fetchVCards as davFetchVCards, createCalendarObject as davCreateCalendarObject, updateCalendarObject as davUpdateCalendarObject, deleteCalendarObject as davDeleteCalendarObject, DAVNamespaceShort, propfind, type DAVCalendar, type DAVCalendarObject, type DAVAddressBook } from 'tsdav'
 import { isServerSource } from './types-helper'
 import type { Calendar, CalendarObject } from '../types/calendar'
-import type { CalendarSource, ServerSource, CalendarResponse } from '../types/options'
+import type { CalendarSource, ServerSource, CalendarResponse, AddressBookSource } from '../types/options'
+import type { AddressBook, VCard } from '../types/addressbook'
 
 
 // HACK - CJ - 2025-07-09 - resolve the issue in Radicale of ts-ics directly (https://github.com/algoo/open-calendar/issues/1)
@@ -148,38 +149,120 @@ async function davFetchCalendar(params: {
   fetchOptions?: RequestInit
 }): Promise<DAVCalendar> {
   const { url, headers, fetchOptions } = params
-  const props = {
-    [`${DAVNamespaceShort.CALDAV}:calendar-description`]: {},
-    [`${DAVNamespaceShort.CALDAV}:calendar-timezone`]: {},
-    [`${DAVNamespaceShort.DAV}:displayname`]: {},
-    [`${DAVNamespaceShort.CALDAV_APPLE}:calendar-color`]: {},
-    [`${DAVNamespaceShort.CALENDAR_SERVER}:getctag`]: {},
-    [`${DAVNamespaceShort.DAV}:resourcetype`]: {},
-    [`${DAVNamespaceShort.CALDAV}:supported-calendar-component-set`]: {},
-    [`${DAVNamespaceShort.DAV}:sync-token`]: {},
+  const response = await propfind({
+    url,
+    props: {
+      [`${DAVNamespaceShort.CALDAV}:calendar-description`]: {},
+      [`${DAVNamespaceShort.CALDAV}:calendar-timezone`]: {},
+      [`${DAVNamespaceShort.DAV}:displayname`]: {},
+      [`${DAVNamespaceShort.CALDAV_APPLE}:calendar-color`]: {},
+      [`${DAVNamespaceShort.CALENDAR_SERVER}:getctag`]: {},
+      [`${DAVNamespaceShort.DAV}:resourcetype`]: {},
+      [`${DAVNamespaceShort.CALDAV}:supported-calendar-component-set`]: {},
+      [`${DAVNamespaceShort.DAV}:sync-token`]: {},
+    },
+    headers,
+    fetchOptions,
+  })
+  const rs = response[0]
+  if (rs.error) {
+    throw new Error(`Calendar ${url} does not exists: ${rs.error}`)
   }
-  const response = await propfind({ url, headers, fetchOptions, props })
-  const calendar = response[0]
-  if (calendar.error) {
-    // TODO - CJ - 2025-07-03 - Proper error handling
-    throw 'Calendar does not exists'
+  if (Object.keys(rs.props?.resourceType ?? {}).includes('calendar')) {
+    throw new Error(`${url} is not a ${rs.props?.resourceType} and not a calendar`)
   }
-  const description = calendar.props?.calendarDescription
-  const timezone = calendar.props?.calendarTimezone
+  const description = rs.props?.calendarDescription
+  const timezone = rs.props?.calendarTimezone
   return {
     description: typeof description === 'string' ? description : '',
     timezone: typeof timezone === 'string' ? timezone : '',
     url: params.url,
-    ctag: calendar.props?.getctag,
-    calendarColor: calendar.props?.calendarColor,
-    displayName: calendar.props?.displayname._cdata ?? calendar.props?.displayname,
-    components: Array.isArray(calendar.props?.supportedCalendarComponentSet.comp)
+    ctag: rs.props?.getctag,
+    calendarColor: rs.props?.calendarColor,
+    displayName: rs.props?.displayname._cdata ?? rs.props?.displayname,
+    components: Array.isArray(rs.props?.supportedCalendarComponentSet.comp)
       // NOTE - CJ - 2025-07-03 - comp represents an list of XML nodes in the DAVResponse format
       // sc could be `<C:comp name="VEVENT" />`
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ? calendar.props?.supportedCalendarComponentSet.comp.map((sc: any) => sc._attributes.name)
-      : [calendar.props?.supportedCalendarComponentSet.comp?._attributes.name],
-    resourcetype: Object.keys(calendar.props?.resourcetype),
-    syncToken: calendar.props?.syncToken,
+      ? rs.props?.supportedCalendarComponentSet.comp.map((sc: any) => sc._attributes.name)
+      : [rs.props?.supportedCalendarComponentSet.comp?._attributes.name],
+    resourcetype: Object.keys(rs.props?.resourcetype),
+    syncToken: rs.props?.syncToken,
   }
+}
+
+export async function fetchAddressBooks(source: ServerSource | AddressBookSource): Promise<AddressBook[]> {
+  if (isServerSource(source)) {
+    const account = await createAccount({
+      account: { serverUrl: source.serverUrl, accountType: 'caldav' },
+      headers: source.headers,
+      fetchOptions: source.fetchOptions,
+    })
+    const books = await davFetchAddressBooks({ account, headers: source.headers, fetchOptions: source.fetchOptions })
+    return books.map(book => ({ ...book, headers: source.headers, fetchOptions: source.fetchOptions }))
+  } else {
+    const book = await davFetchAddressBook({
+      url: source.addressBookUrl,
+      headers: source.headers,
+      fetchOptions: source.fetchOptions,
+    })
+    return [{ ...book, headers: source.headers, fetchOptions: source.fetchOptions, uid: source.addressBookUid }]
+  }
+}
+
+
+// NOTE - CJ - 2025/07/03 - Inspired from https://github.com/natelindev/tsdav/blob/master/src/addressBook.ts#L73
+async function davFetchAddressBook(params: {
+  url: string,
+  headers?: Record<string, string>,
+  fetchOptions?: RequestInit
+}): Promise<DAVAddressBook> {
+  const { url, headers, fetchOptions } = params
+  const response = await propfind({
+    url,
+    props: {
+      [`${DAVNamespaceShort.DAV}:displayname`]: {},
+      [`${DAVNamespaceShort.CALENDAR_SERVER}:getctag`]: {},
+      [`${DAVNamespaceShort.DAV}:resourcetype`]: {},
+      [`${DAVNamespaceShort.DAV}:sync-token`]: {},
+    },
+    headers,
+    fetchOptions,
+  })
+  const rs = response[0]
+  if (rs.error) {
+    throw new Error(`Address book ${url} does not exists: ${rs.error}`)
+  }
+  if (Object.keys(rs.props?.resourceType ?? {}).includes('addressbook')) {
+    throw new Error(`${url} is not a ${rs.props?.resourceType} and not an addressbook`)
+  }
+  const displayName = rs.props?.displayname?._cdata ?? rs.props?.displayname
+  return {
+    url: url,
+    ctag: rs.props?.getctag,
+    displayName: typeof displayName === 'string' ? displayName : '',
+    resourcetype: Object.keys(rs.props?.resourcetype),
+    syncToken: rs.props?.syncToken,
+  }
+}
+
+export async function fetchVCards(addressBook: AddressBook): Promise<VCard[]> {
+  const davVCards = await davFetchVCards({
+    addressBook: addressBook,
+    headers: addressBook.headers,
+    fetchOptions: addressBook.fetchOptions,
+  })
+  console.log(davVCards)
+  const vCards: VCard[] = davVCards.map(o => ({
+    url: o.url,
+    etag: o.etag,
+    data: {
+      contacts: [{
+        email: 'test@test.test',
+        name: 'test',
+      }],
+    },
+    addressBookUrl: addressBook.url,
+  }))
+  return vCards
 }

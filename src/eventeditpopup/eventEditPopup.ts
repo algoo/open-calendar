@@ -6,7 +6,7 @@ import { contactToMailbox, getRRuleString, isEventAllDay, mailboxToContact, offs
 import { tzlib_get_ical_block, tzlib_get_offset, tzlib_get_timezones } from 'timezones-ical-library'
 import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
-import type { Contact } from '../types/addressbook'
+import type { AddressBookContact, Contact } from '../types/addressbook'
 import type { DomEvent, EventEditCallback, EventEditCreateInfo, EventEditDeleteInfo, EventEditUpdateInfo } from '../types/options'
 import type { Calendar } from '../types/calendar'
 import { attendeeRoleTypes, namedRRules } from '../contants'
@@ -212,9 +212,11 @@ export class EventEditPopup {
     handleDelete({calendarUrl, event})
   }
 
-  public open = (calendarUrl: string, event: IcsEvent, calendars: Calendar[], contacts: Contact[]) => {
-    const allContacts = [...contacts, ...event.attendees ?? [], event.organizer].filter(a => a !== undefined)
-    this.setContacts(allContacts)
+  public open = (calendarUrl: string, event: IcsEvent, calendars: Calendar[], contacts: AddressBookContact[]) => {
+    this.setContacts([
+      ...contacts.map(c => c.contact),
+      ...event.attendees ?? [], event.organizer,
+    ].filter(a => a !== undefined))
     this.setCalendars(calendars)
 
     this._calendarUrl = calendarUrl
