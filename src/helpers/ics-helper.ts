@@ -1,6 +1,7 @@
 import { generateIcsRecurrenceRule, type IcsDateObject, type IcsEvent, type IcsRecurrenceRule } from 'ts-ics'
-import type { Contact, EventUid } from '../types'
 import { parseOneAddress } from 'email-addresses'
+import type { EventUid } from '../types/calendar'
+import type { Contact } from '../types/addressbook'
 
 export function isEventAllDay(event: IcsEvent) {
   return event.start.type === 'DATE' || event.end?.type === 'DATE'

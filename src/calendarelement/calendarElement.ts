@@ -4,7 +4,6 @@ import '@event-calendar/core/index.css'
 import { getEventEnd, type IcsEvent } from 'ts-ics'
 import { EventEditPopup } from '../eventeditpopup/eventEditPopup'
 import { hasCalendarHandlers, hasEventHandlers } from '../helpers/types-helper'
-import type { CalendarOptions, CalendarSource, ServerSource, EventUid, EventEditHandlers, CalendarEvent, EventChangeHandlers, SelectCalendarHandlers, SelectedCalendar, View, BodyHandlers, EventBodyInfo, DomEvent, AddressBookFn } from '../types'
 import { isEventAllDay, offsetDate } from '../helpers/ics-helper'
 import './calendarElement.css'
 import { CalendarSelectDropdown } from '../calendarselectdropdown/calendarSelectDropdown'
@@ -13,6 +12,8 @@ import { faRefresh } from '@fortawesome/free-solid-svg-icons'
 import { CalendarClient } from '../calendarClient'
 import { getTranslations } from '../translations'
 import { EventBody } from '../eventBody/eventBody'
+import type { AddressBookFn, BodyHandlers, CalendarOptions, CalendarSource, DomEvent, EventBodyInfo, EventChangeHandlers, EventEditHandlers, SelectCalendarHandlers, SelectedCalendar, ServerSource, View } from '../types/options'
+import type { CalendarEvent, EventUid } from '../types/calendar'
 
 library.add(faRefresh)
 

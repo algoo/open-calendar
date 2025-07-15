@@ -1,8 +1,9 @@
 import { tzlib_get_ical_block } from 'timezones-ical-library'
 import { convertIcsCalendar, convertIcsTimezone, generateIcsCalendar, type IcsCalendar } from 'ts-ics'
 import { createAccount, fetchCalendars as davFetchCalendars, fetchCalendarObjects as davFetchCalendarObjects, createCalendarObject as davCreateCalendarObject, updateCalendarObject as davUpdateCalendarObject, deleteCalendarObject as davDeleteCalendarObject, DAVNamespaceShort, propfind, type DAVCalendar, type DAVCalendarObject } from 'tsdav'
-import type { CalendarSource, ServerSource, Calendar, CalendarObject, CalendarResponse } from '../types'
 import { isServerSource } from './types-helper'
+import type { Calendar, CalendarObject } from '../types/calendar'
+import type { CalendarSource, ServerSource, CalendarResponse } from '../types/options'
 
 
 // HACK - CJ - 2025-07-09 - resolve the issue in Radicale of ts-ics directly (https://github.com/algoo/open-calendar/issues/1)

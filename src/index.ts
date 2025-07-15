@@ -1,7 +1,7 @@
 import { CalendarElement } from './calendarelement/calendarElement'
-import type { CalendarOptions, CalendarSource, AddressBookFn, RecursivePartial, ServerSource } from './types'
 import './index.css'
 import { setTranslations, type ResourceBundle} from './translations'
+import type { CalendarOptions, CalendarSource, AddressBookFn, RecursivePartial, ServerSource } from './types/options'
 
 export async function createCalendar(
   calDavSources: (ServerSource | CalendarSource)[],

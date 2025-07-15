@@ -1,5 +1,4 @@
 import { escapeHtml, parseHtml } from '../helpers/dom-helper'
-import type { EventBodyInfo, IcsAttendeeRoleType } from '../types'
 import Autolinker from 'autolinker'
 import { icon, library } from '@fortawesome/fontawesome-svg-core'
 import { faRepeat, faBell } from '@fortawesome/free-solid-svg-icons'
@@ -7,6 +6,7 @@ import './eventBody.css'
 import { contactToMailbox, isEventAllDay } from '../helpers/ics-helper'
 import type { IcsAttendeePartStatusType } from 'ts-ics'
 import { getTranslations } from '../translations'
+import type { EventBodyInfo, IcsAttendeeRoleType } from '../types/options'
 
 library.add(faRepeat, faBell)
 

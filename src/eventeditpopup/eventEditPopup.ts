@@ -1,12 +1,15 @@
 import { convertIcsRecurrenceRule, getEventEndFromDuration, type IcsAttendee, type IcsDateObject, type IcsEvent } from 'ts-ics'
 import './eventEditPopup.css'
-import { attendeeRoleTypes, namedRRules, type Calendar, type Contact, type DomEvent, type EventEditCallback, type EventEditCreateInfo, type EventEditDeleteInfo, type EventEditUpdateInfo } from '../types'
 import { Popup } from '../popup/popup'
 import { parseHtml } from '../helpers/dom-helper'
 import { contactToMailbox, getRRuleString, isEventAllDay, mailboxToContact, offsetDate } from '../helpers/ics-helper'
 import { tzlib_get_ical_block, tzlib_get_offset, tzlib_get_timezones } from 'timezones-ical-library'
 import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
+import type { Contact } from '../types/addressbook'
+import type { DomEvent, EventEditCallback, EventEditCreateInfo, EventEditDeleteInfo, EventEditUpdateInfo } from '../types/options'
+import type { Calendar } from '../types/calendar'
+import { attendeeRoleTypes, namedRRules } from '../contants'
 
 const html = /*html*/`
 <form name="event" class="open-calendar__event-edit open-calendar__form">

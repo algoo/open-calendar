@@ -1,4 +1,4 @@
-import type { RecursivePartial } from './types'
+import type { RecursivePartial } from './types/options'
 
 // HACK - CJ - 2025-07-03 - Ideally, this object would have been a json file and imported with:
 // `import en from 'locale/en/translation.json'`
