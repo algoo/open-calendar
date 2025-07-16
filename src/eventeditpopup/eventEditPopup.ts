@@ -158,9 +158,12 @@ export class EventEditPopup {
   }
 
   private setContacts = (contacts: Contact[]) => {
-    this._contacts = contacts
+    this._contacts = []
+    for (const contact of contacts) {
+      if (!this._contacts.find(c => c.name === contact.name && c.email === contact.email)) this._contacts.push(contact)
+    }
     const mailboxesElement = parseHtml<HTMLOptionElement>(mailboxesHtml, {
-      mailboxes: contacts.map(c => contactToMailbox(c)),
+      mailboxes: this._contacts.map(c => contactToMailbox(c)),
     })
     this._mailboxes.innerHTML = ''
     this._mailboxes.append(...Array.from(mailboxesElement))
