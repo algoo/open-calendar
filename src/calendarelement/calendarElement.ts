@@ -13,6 +13,7 @@ import { faRefresh } from '@fortawesome/free-solid-svg-icons'
 import { CalendarClient } from '../calendarClient'
 import { getTranslations } from '../translations'
 import { EventBody } from '../eventBody/eventBody'
+import { TIME_MINUTE, TIME_DAY } from '../constants'
 
 library.add(faRefresh)
 
@@ -23,11 +24,11 @@ library.add(faRefresh)
 // Those functions correct this by "un-applying" the timezone offset
 function dateToECDate(date: Date, allDay: boolean) {
   if (!allDay) return date
-  return new Date(date.getTime() + date.getTimezoneOffset()*60*1000)
+  return new Date(date.getTime() + date.getTimezoneOffset() * TIME_MINUTE)
 }
 function ecDateToDate(date: Date, allDay: boolean) {
   if (!allDay) return date
-  return new Date(date.getTime() - date.getTimezoneOffset()*60*1000)
+  return new Date(date.getTime() - date.getTimezoneOffset() * TIME_MINUTE)
 }
 
 export class CalendarElement {
@@ -270,7 +271,7 @@ export class CalendarElement {
       uid: '',
       stamp: { date: new Date() },
       start,
-      end: offsetDate(start, (start.type == 'DATE' ? (1*24*60): 30) * 60 * 1000),
+      end: offsetDate(start, start.type == 'DATE' ? (1 * TIME_DAY) : (30 * TIME_MINUTE)),
       ...event,
 
       // NOTE - CJ - 2025-07-03 - Since we specify end, duration should be undefined

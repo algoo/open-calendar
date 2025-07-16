@@ -7,6 +7,7 @@ import { getRRuleString, isEventAllDay, offsetDate } from '../helpers/ics-helper
 import { tzlib_get_ical_block, tzlib_get_offset, tzlib_get_timezones } from 'timezones-ical-library'
 import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
+import { TIME_MINUTE } from '../constants'
 
 const html = /*html*/`
 <form name="event" class="open-calendar__event-edit open-calendar__form">
@@ -195,11 +196,11 @@ export class EventEditPopup {
 
     this._calendarUrl = calendarUrl
     this._event = event
-    const localTzid = Intl.DateTimeFormat().resolvedOptions().timeZone
-    const localTzoffset = new Date().getTimezoneOffset() * 60 * 1000
+    const localTzId = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const localTzOffset = new Date().getTimezoneOffset() * TIME_MINUTE
     const localStart = event.start.local ?? {
-      date: new Date(event.start.date.getTime() - localTzoffset),
-      timezone: localTzid,
+      date: new Date(event.start.date.getTime() - localTzOffset),
+      timezone: localTzId,
     }
     const end = event.end ??
       offsetDate(
@@ -207,8 +208,8 @@ export class EventEditPopup {
         getEventEndFromDuration(event.start.date, event.duration).getTime() - event.start.date.getTime(),
       )
     const localEnd = end.local ?? {
-      date: new Date(end.date.getTime() - localTzoffset),
-      timezone: localTzid,
+      date: new Date(end.date.getTime() - localTzOffset),
+      timezone: localTzId,
     }
 
     const inputs = this._form.elements;
