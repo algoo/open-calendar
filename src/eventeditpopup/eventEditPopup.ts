@@ -6,6 +6,7 @@ import { contactToMailbox, getRRuleString, isEventAllDay, mailboxToContact, offs
 import { tzlib_get_ical_block, tzlib_get_offset, tzlib_get_timezones } from 'timezones-ical-library'
 import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
+import { TIME_MINUTE } from '../constants'
 import type { AddressBookContact, Contact } from '../types/addressbook'
 import type { DomEvent, EventEditCallback, EventEditCreateInfo, EventEditDeleteInfo, EventEditUpdateInfo } from '../types/options'
 import type { Calendar } from '../types/calendar'
@@ -221,14 +222,21 @@ export class EventEditPopup {
 
     this._calendarUrl = calendarUrl
     this._event = event
-
-    const localStart = event.start.local ?? { date: event.start.date, timezone: 'UTC', tzoffset: '+0000' }
+    const localTzId = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const localTzOffset = new Date().getTimezoneOffset() * TIME_MINUTE
+    const localStart = event.start.local ?? {
+      date: new Date(event.start.date.getTime() - localTzOffset),
+      timezone: localTzId,
+    }
     const end = event.end ??
       offsetDate(
         localStart,
         getEventEndFromDuration(event.start.date, event.duration).getTime() - event.start.date.getTime(),
       )
-    const localEnd = end.local ?? { date: end.date, timezone: 'UTC', tzoffset: '+0000' }
+    const localEnd = end.local ?? {
+      date: new Date(end.date.getTime() - localTzOffset),
+      timezone: localTzId,
+    }
 
     const inputs = this._form.elements;
     (inputs.namedItem('calendar') as HTMLInputElement).value = calendarUrl;
