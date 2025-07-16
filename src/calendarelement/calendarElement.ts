@@ -291,7 +291,7 @@ export class CalendarElement {
       jsEvent,
       calendars: this._client.getCalendars(),
       event: newEvent,
-      contacts: this._client.getContacts(),
+      vCards: this._client.getAddressBookVCards(),
       handleCreate: this.handleCreateEvent,
     })
   }
@@ -322,7 +322,7 @@ export class CalendarElement {
     this._eventEditHandlers!.onUpdateEvent({
       jsEvent,
       calendars: this._client.getCalendars(),
-      contacts: this._client.getContacts(),
+      vCards: this._client.getAddressBookVCards(),
       ...calendarEvent,
       handleUpdate: this.handleUpdateEvent,
       handleDelete: this.handleDeleteEvent,

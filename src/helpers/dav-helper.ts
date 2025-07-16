@@ -4,8 +4,8 @@ import { createAccount, fetchAddressBooks as davFetchAddressBooks, fetchCalendar
 import { isServerSource } from './types-helper'
 import type { Calendar, CalendarObject } from '../types/calendar'
 import type { CalendarSource, ServerSource, CalendarResponse, AddressBookSource } from '../types/options'
-import type { AddressBook, VCard } from '../types/addressbook'
-
+import type { AddressBook, AddressBookObject } from '../types/addressbook'
+import ICAL from 'ical.js'
 
 // HACK - CJ - 2025-07-09 - resolve the issue in Radicale of ts-ics directly (https://github.com/algoo/open-calendar/issues/1)
 function fixAlldayRecurringDate(ics: string) {
@@ -246,23 +246,16 @@ async function davFetchAddressBook(params: {
   }
 }
 
-export async function fetchVCards(addressBook: AddressBook): Promise<VCard[]> {
+export async function fetchAddressBookObjects(addressBook: AddressBook): Promise<AddressBookObject[]> {
   const davVCards = await davFetchVCards({
     addressBook: addressBook,
     headers: addressBook.headers,
     fetchOptions: addressBook.fetchOptions,
   })
-  console.log(davVCards)
-  const vCards: VCard[] = davVCards.map(o => ({
+  return davVCards.map(o => ({
     url: o.url,
     etag: o.etag,
-    data: {
-      contacts: [{
-        email: 'test@test.test',
-        name: 'test',
-      }],
-    },
+    data: new ICAL.Component(ICAL.parse(o.data)),
     addressBookUrl: addressBook.url,
   }))
-  return vCards
 }

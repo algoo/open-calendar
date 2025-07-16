@@ -7,7 +7,7 @@ import { tzlib_get_ical_block, tzlib_get_offset, tzlib_get_timezones } from 'tim
 import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
 import { TIME_MINUTE } from '../constants'
-import type { AddressBookContact, Contact } from '../types/addressbook'
+import type { AddressBookVCard, Contact } from '../types/addressbook'
 import type { DomEvent, EventEditCallback, EventEditCreateInfo, EventEditDeleteInfo, EventEditUpdateInfo } from '../types/options'
 import type { Calendar } from '../types/calendar'
 import { attendeeRoleTypes, namedRRules } from '../contants'
@@ -186,16 +186,16 @@ export class EventEditPopup {
     role.value = attendee.role || 'REQ-PARTICIPANT'
   }
 
-  public onCreate = ({calendars, contacts, event, handleCreate}: EventEditCreateInfo) => {
+  public onCreate = ({calendars, vCards, event, handleCreate}: EventEditCreateInfo) => {
     this._form.classList.toggle('open-calendar__event-edit--create', true)
     this._handleSave = handleCreate
     this._handleDelete = null
-    this.open('', event, calendars, contacts)
+    this.open('', event, calendars, vCards)
   }
   public onUpdate = ({
     calendarUrl,
     calendars,
-    contacts,
+    vCards,
     event,
     recurringEvent,
     handleDelete,
@@ -204,18 +204,18 @@ export class EventEditPopup {
     this._form.classList.toggle('open-calendar__event-edit--create', false)
     this._handleSave = handleUpdate
     this._handleDelete = handleDelete
-    if (!recurringEvent) this.open(calendarUrl, event, calendars, contacts)
+    if (!recurringEvent) this.open(calendarUrl, event, calendars, vCards)
     else this._recurringPopup.open(editAll => {
-      return this.open(calendarUrl, editAll ? recurringEvent : event, calendars, contacts)
+      return this.open(calendarUrl, editAll ? recurringEvent : event, calendars, vCards)
     })
   }
   public onDelete = ({calendarUrl, event, handleDelete}: EventEditDeleteInfo) => {
     handleDelete({calendarUrl, event})
   }
 
-  public open = (calendarUrl: string, event: IcsEvent, calendars: Calendar[], contacts: AddressBookContact[]) => {
+  public open = (calendarUrl: string, event: IcsEvent, calendars: Calendar[], vCards: AddressBookVCard[]) => {
     this.setContacts([
-      ...contacts.map(c => c.contact),
+      ...vCards.filter(c => c.vCard.email !== null).map(c => c.vCard as Contact),
       ...event.attendees ?? [], event.organizer,
     ].filter(a => a !== undefined))
     this.setCalendars(calendars)

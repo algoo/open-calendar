@@ -1,6 +1,6 @@
 import type { IcsEvent } from 'ts-ics'
 import type { Calendar, CalendarEvent } from './calendar'
-import type { AddressBookContact } from './addressbook'
+import type { AddressBookVCard } from './addressbook'
 import type { attendeeRoleTypes, availableViews } from '../contants'
 
 export type RecursivePartial<T> = {
@@ -64,7 +64,7 @@ export type EventEditCreateInfo = {
   jsEvent: DomEvent
   event: IcsEvent
   calendars: Calendar[]
-  contacts: AddressBookContact[]
+  vCards: AddressBookVCard[]
   handleCreate: EventEditCallback
 }
 export type EventEditUpdateInfo = {
@@ -73,7 +73,7 @@ export type EventEditUpdateInfo = {
   event: IcsEvent
   recurringEvent?: IcsEvent
   calendars: Calendar[]
-  contacts: AddressBookContact[]
+  vCards: AddressBookVCard[]
   handleUpdate: EventEditCallback
   handleDelete: EventEditCallback
 }
