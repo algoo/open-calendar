@@ -13,7 +13,7 @@ import { CalendarClient } from '../calendarClient'
 import { getTranslations } from '../translations'
 import { EventBody } from '../eventBody/eventBody'
 import { TIME_MINUTE, TIME_DAY } from '../constants'
-import type { AddressBookSource, BodyHandlers, CalendarOptions, CalendarSource, DomEvent, EventBodyInfo, EventChangeHandlers, EventEditHandlers, SelectCalendarHandlers, SelectedCalendar, ServerSource, View } from '../types/options'
+import type { AddressBookSource, BodyHandlers, CalendarOptions, CalendarSource, DefaultEventEditOptions, DomEvent, EventBodyInfo, EventChangeHandlers, EventEditHandlers, SelectCalendarHandlers, SelectedCalendar, ServerSource, View } from '../types/options'
 import type { CalendarEvent, EventUid } from '../types/calendar'
 
 library.add(faRefresh)
@@ -71,7 +71,7 @@ export class CalendarElement {
         onUpdateEvent: options.onUpdateEvent,
         onDeleteEvent: options.onDeleteEvent,
       }
-      : this.createDefaultEventEdit(target)
+      : this.createDefaultEventEdit(target, options ?? {})
 
     this._calendarSelectHandlers = options && hasCalendarHandlers(options)
       ? {
@@ -164,8 +164,8 @@ export class CalendarElement {
     this._target = null
   }
 
-  private createDefaultEventEdit = (target: Node): EventEditHandlers => {
-    this._eventEdit ??= new EventEditPopup(target)
+  private createDefaultEventEdit = (target: Node, options: DefaultEventEditOptions): EventEditHandlers => {
+    this._eventEdit ??= new EventEditPopup(target, options)
     return {
       onCreateEvent: this._eventEdit.onCreate,
       onUpdateEvent: this._eventEdit.onUpdate,

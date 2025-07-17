@@ -111,6 +111,10 @@ export type CalendarElementOptions = {
   editable?: boolean
 }
 
+export type DefaultEventEditOptions = {
+  hideVCardEmails?: boolean
+}
+
 export type CalendarOptions =
   // NOTE - CJ - 2025-07-03
   // May define individual options or not
@@ -118,7 +122,7 @@ export type CalendarOptions =
   // Must define all handlers or none
   & (SelectCalendarHandlers | Record<never, never>)
   // Must define all handlers or none
-  & (EventEditHandlers | Record<never, never>)
+  & (EventEditHandlers | DefaultEventEditOptions)
   // May define individual handlers or not
   & EventChangeHandlers
   // May define handlers or not, but they will be assigned a default value if they are not

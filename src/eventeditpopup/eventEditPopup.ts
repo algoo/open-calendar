@@ -2,15 +2,16 @@ import { convertIcsRecurrenceRule, getEventEndFromDuration, type IcsAttendee, ty
 import './eventEditPopup.css'
 import { Popup } from '../popup/popup'
 import { parseHtml } from '../helpers/dom-helper'
-import { contactToMailbox, getRRuleString, isEventAllDay, mailboxToContact, offsetDate } from '../helpers/ics-helper'
+import { contactToMailbox, getRRuleString, isEventAllDay, isSameContact, mailboxToContact, offsetDate } from '../helpers/ics-helper'
 import { tzlib_get_ical_block, tzlib_get_offset, tzlib_get_timezones } from 'timezones-ical-library'
 import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
 import { TIME_MINUTE } from '../constants'
 import type { AddressBookVCard, Contact } from '../types/addressbook'
-import type { DomEvent, EventEditCallback, EventEditCreateInfo, EventEditDeleteInfo, EventEditUpdateInfo } from '../types/options'
+import type { DefaultEventEditOptions, DomEvent, EventEditCallback, EventEditCreateInfo, EventEditDeleteInfo, EventEditUpdateInfo } from '../types/options'
 import type { Calendar } from '../types/calendar'
 import { attendeeRoleTypes, namedRRules } from '../contants'
+import type { VCard } from '../VCard'
 
 const html = /*html*/`
 <form name="event" class="open-calendar__event-edit open-calendar__form">
@@ -106,13 +107,17 @@ export class EventEditPopup {
   private _attendees: HTMLDivElement
   private _rruleUnchanged: HTMLOptionElement
 
-  private _contacts: Contact[] = []
+  private _hideVCardEmails?: boolean
+  private _vCardContacts: VCard[] = []
+  private _eventContacts: Contact[] = []
+
   private _event?: IcsEvent
   private _calendarUrl?: string
   private _handleSave: EventEditCallback | null = null
   private _handleDelete: EventEditCallback | null = null
 
-  public constructor(target: Node) {
+  public constructor(target: Node, options: DefaultEventEditOptions) {
+    this._hideVCardEmails = options.hideVCardEmails
     const timezones = tzlib_get_timezones() as string[]
 
     this._recurringPopup = new RecurringEventPopup(target)
@@ -157,13 +162,22 @@ export class EventEditPopup {
     this._calendar.append(...Array.from(calendarElements))
   }
 
-  private setContacts = (contacts: Contact[]) => {
-    this._contacts = []
-    for (const contact of contacts) {
-      if (!this._contacts.find(c => c.name === contact.name && c.email === contact.email)) this._contacts.push(contact)
+  private setContacts = (vCardContacts: VCard[], eventContacts: Contact[]) => {
+    this._vCardContacts = []
+    for (const contact of vCardContacts) {
+      if (this._vCardContacts.find(c => isSameContact(c, contact))) continue
+      this._vCardContacts.push(contact)
+    }
+    for (const contact of eventContacts) {
+      if (this._vCardContacts.find(c => isSameContact(c, contact))) continue
+      if (this._eventContacts.find(c => isSameContact(c, contact))) continue
+      this._eventContacts.push(contact)
     }
     const mailboxesElement = parseHtml<HTMLOptionElement>(mailboxesHtml, {
-      mailboxes: this._contacts.map(c => contactToMailbox(c)),
+      mailboxes: [
+        ...this._vCardContacts.map(c => this.getValueFromVCard(c)),
+        ...this._eventContacts.map(c => this.getValueFromContact(c)),
+      ],
     })
     this._mailboxes.innerHTML = ''
     this._mailboxes.append(...Array.from(mailboxesElement))
@@ -175,7 +189,7 @@ export class EventEditPopup {
 
   private addAttendee = (attendee: IcsAttendee) => {
     const element = parseHtml<HTMLDivElement>(attendeeHtml, {
-      mailbox: contactToMailbox(attendee),
+      mailbox: this.getValueFromContact(attendee),
       role: attendee.role || 'REQ-PARTICIPANT',
       roles: attendeeRoleTypes.map(role => ({ key: role, translation: getTranslations().attendeeRoles[role] })),
       t: getTranslations().eventForm,
@@ -217,10 +231,10 @@ export class EventEditPopup {
   }
 
   public open = (calendarUrl: string, event: IcsEvent, calendars: Calendar[], vCards: AddressBookVCard[]) => {
-    this.setContacts([
-      ...vCards.filter(c => c.vCard.email !== null).map(c => c.vCard as Contact),
-      ...event.attendees ?? [], event.organizer,
-    ].filter(a => a !== undefined))
+    this.setContacts(
+      vCards.filter(c => c.vCard.email !== null).map(c => c.vCard),
+      [...event.attendees ?? [], event.organizer].filter(a => a !== undefined),
+    )
     this.setCalendars(calendars)
 
     this._calendarUrl = calendarUrl
@@ -265,7 +279,7 @@ export class EventEditPopup {
     // TODO - CJ - 2025-07-03 - Check if needs to be hidden or done differently,
     // as I believe Thunderbird also adds the organizer to the attendee list;
     (inputs.namedItem('organizer-mailbox') as HTMLInputElement).value = event.organizer
-      ? contactToMailbox(event.organizer)
+      ? this.getValueFromContact(event.organizer)
       : ''
 
     const rrule =  getRRuleString(event.recurrenceRule)
@@ -299,11 +313,6 @@ export class EventEditPopup {
       }
     }
 
-    const getContact = (mailbox: string) => {
-      const contact = this._contacts.find(c => contactToMailbox(c) === mailbox)
-      return contact ?? mailboxToContact(mailbox)
-    }
-
     const mailboxes = data.getAll('attendee-mailbox') as string[]
     const roles = data.getAll('attendee-role') as string[]
     const rrule = data.get('rrule') as string
@@ -320,11 +329,11 @@ export class EventEditPopup {
       organizer: data.get('organizer-mailbox')
         ? {
           ...this._event!.organizer,
-          ...getContact(data.get('organizer-mailbox') as string),
+          ...this.getContactFromValue(data.get('organizer-mailbox') as string),
         }
         : undefined,
       attendees: mailboxes.map((mailbox, i) => ({
-        ...getContact(mailbox),
+        ...this.getContactFromValue(mailbox),
         role: roles[i],
       })) || undefined,
       recurrenceRule: rrule ? convertIcsRecurrenceRule(undefined, {value: rrule}) : undefined,
@@ -343,5 +352,21 @@ export class EventEditPopup {
   public delete = async () => {
     await this._handleDelete!({ calendarUrl: this._calendarUrl!, event: this._event!})
     this._popup.setVisible(false)
+  }
+
+  public getContactFromValue = (value: string) => {
+    const contact = this._vCardContacts.find(c => (this._hideVCardEmails ? c.name : contactToMailbox(c)) === value )
+    return contact
+      // NOTE - CJ - 2025-07-17 - we need to reconstruct an object as the spread syntax does not work for properties
+      ? { name: contact.name!, email: contact.email!}
+      : this._eventContacts.find(c => contactToMailbox(c) === value)
+      ?? mailboxToContact(value)
+  }
+
+  public getValueFromVCard = (contact: VCard) => {
+    return this._hideVCardEmails ? contact.name ?? contactToMailbox(contact) : contactToMailbox(contact)
+  }
+  public getValueFromContact = (contact: Contact) => {
+    return contactToMailbox(contact)
   }
 }
