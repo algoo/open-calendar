@@ -165,8 +165,8 @@ async function davFetchCalendar(params: {
     fetchOptions,
   })
   const rs = response[0]
-  if (rs.error) {
-    throw new Error(`Calendar ${url} does not exists: ${rs.error}`)
+  if (!rs.ok) {
+    throw new Error(`Calendar ${url} does not exists. ${rs.status} ${rs.statusText}`)
   }
   if (Object.keys(rs.props?.resourceType ?? {}).includes('calendar')) {
     throw new Error(`${url} is not a ${rs.props?.resourceType} and not a calendar`)
@@ -230,8 +230,8 @@ async function davFetchAddressBook(params: {
     fetchOptions,
   })
   const rs = response[0]
-  if (rs.error) {
-    throw new Error(`Address book ${url} does not exists: ${rs.error}`)
+  if (!rs.ok) {
+    throw new Error(`Address book ${url} does not exists. ${rs.status} ${rs.statusText}`)
   }
   if (Object.keys(rs.props?.resourceType ?? {}).includes('addressbook')) {
     throw new Error(`${url} is not a ${rs.props?.resourceType} and not an addressbook`)

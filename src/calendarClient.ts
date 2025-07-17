@@ -5,6 +5,7 @@ import type { CalendarSource, ServerSource, AddressBookSource } from './types/op
 import type { Calendar, CalendarEvent, CalendarObject, DisplayedCalendarEvent, EventUid } from './types/calendar'
 import type { AddressBook, AddressBookVCard, AddressBookObject } from './types/addressbook'
 import { VCard } from './VCard'
+import { isServerSource } from './helpers/types-helper'
 
 export class CalendarClient {
 
@@ -22,7 +23,15 @@ export class CalendarClient {
   private _addressBookObjects: AddressBookObject[] = []
 
   public loadCalendars = async (sources: (ServerSource | CalendarSource)[]) => {
-    const calendarsPerSource = await Promise.all(sources.map(source => fetchCalendars(source)))
+    const calendarsPerSource = await Promise.all(sources.map(async source => {
+      try {
+        return await fetchCalendars(source)
+      } catch (error) {
+        const url = isServerSource(source) ? source.serverUrl : source.calendarUrl
+        console.error(`Could not fetch calendars from ${url}. ${error}`)
+        return []
+      }
+    }))
     this._calendars = calendarsPerSource.flat()
   }
 
@@ -36,7 +45,14 @@ export class CalendarClient {
     this._lastFetchNumber++
     const currentFetchNumber = this._lastFetchNumber
     const allObjects = await Promise.all(
-      this._calendars.map(calendar => fetchCalendarObjects(calendar, { start, end }, true)),
+      this._calendars.map(async calendar => {
+        try {
+          return await fetchCalendarObjects(calendar, { start, end }, true)
+        } catch (error) {
+          console.error(`Could not fetch events from ${calendar.url}. ${error}`)
+          return { calendarObjects: [], recurringObjects: [] }
+        }
+      }),
     )
     // NOTE - CJ - 2025-07-15 - only update the objects if this is the latest fetch
     // This can happen if this fetch took more time than the last one
@@ -180,13 +196,28 @@ export class CalendarClient {
   }
 
   public loadAddressBooks = async (sources: (ServerSource | AddressBookSource)[]) => {
-    const addressBooksPerSources = await Promise.all(sources.map(source => fetchAddressBooks(source)))
+    const addressBooksPerSources = await Promise.all(sources.map(async source => {
+      try {
+        return await fetchAddressBooks(source)
+      } catch (error) {
+        const url = isServerSource(source) ? source.serverUrl : source.addressBookUrl
+        console.error(`Could not fetch address books from ${url}. ${error}`)
+        return []
+      }
+    }))
     this._addressBooks = addressBooksPerSources.flat()
   }
 
-  public fetchAndLoadContacts = async (): Promise<AddressBookVCard[]> => {
+  public fetchAndLoadVCards = async (): Promise<AddressBookVCard[]> => {
     const vCards = await Promise.all(
-      this._addressBooks.map(book => fetchAddressBookObjects(book)),
+      this._addressBooks.map(async book => {
+        try {
+          return await fetchAddressBookObjects(book)
+        } catch (error) {
+          console.error(`Could not fetch vcards objects from ${book.url}. ${error}`)
+          return []
+        }
+      }),
     )
     this._addressBookObjects = vCards.flat()
     return this.getAddressBookVCards()
