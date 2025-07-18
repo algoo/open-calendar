@@ -1,7 +1,5 @@
 import ICAL from 'ical.js'
 
-// TODO - CJ - 2025-07-16 - test with all versions (2,3,4) of vCards
-
 export class VCard {
 
   public component: ICAL.Component
@@ -21,8 +19,19 @@ export class VCard {
   get email() { return this._getProp('email') as (string | null) }
   set email(value: string | null) { this._setProp('email', value) }
 
-  get name() { return this._getProp('fn') as string }
-  set name(value: string) { this._setProp('fn', value) }
+  get name() {
+    return this.version.startsWith('2')
+      ? (this._getProp('n') as string[]).filter(n => !!n).reverse().join(' ')
+      : this._getProp('fn') as string
+  }
+  set name(value: string) {
+    if (this.version.startsWith('2')) {
+      const [name, family] = value.split(' ', 1)
+      this._setProp('n', [family ?? '', name, '', '', ''])
+    } else {
+      this._setProp('fn', value)
+    }
+  }
 
   private _setProp(name: string, value: unknown) {
     this.component.updatePropertyWithValue(name, value)
