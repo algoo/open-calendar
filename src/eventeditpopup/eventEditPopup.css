@@ -3,6 +3,10 @@
   gap: 0.25rem;
 }
 
+.open-calendar__event-edit__attendee>:first-child {
+  flex-grow: 1;
+}
+
 .open-calendar__event-edit__datetime {
   display: flex;
   gap: 0.25rem;

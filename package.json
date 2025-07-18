@@ -34,6 +34,8 @@
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "autolinker": "^4.1.5",
+    "email-addresses": "^5.0.0",
+    "ical.js": "^2.2.0",
     "mustache": "^4.2.0",
     "timezones-ical-library": "^1.10.0",
     "ts-ics": "^2.1.8",

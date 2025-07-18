@@ -4,7 +4,6 @@ import '@event-calendar/core/index.css'
 import { getEventEnd, type IcsEvent } from 'ts-ics'
 import { EventEditPopup } from '../eventeditpopup/eventEditPopup'
 import { hasCalendarHandlers, hasEventHandlers } from '../helpers/types-helper'
-import type { CalendarOptions, CalendarSource, ServerSource, EventUid, EventEditHandlers, CalendarEvent, EventChangeHandlers, SelectCalendarHandlers, SelectedCalendar, View, BodyHandlers, EventBodyInfo, DomEvent } from '../types'
 import { isEventAllDay, offsetDate } from '../helpers/ics-helper'
 import './calendarElement.css'
 import { CalendarSelectDropdown } from '../calendarselectdropdown/calendarSelectDropdown'
@@ -14,6 +13,8 @@ import { CalendarClient } from '../calendarClient'
 import { getTranslations } from '../translations'
 import { EventBody } from '../eventBody/eventBody'
 import { TIME_MINUTE, TIME_DAY } from '../constants'
+import type { AddressBookSource, BodyHandlers, CalendarOptions, CalendarSource, DefaultComponentsOptions, DomEvent, EventBodyInfo, EventChangeHandlers, EventEditHandlers, SelectCalendarHandlers, SelectedCalendar, ServerSource, View } from '../types/options'
+import type { CalendarEvent, EventUid } from '../types/calendar'
 
 library.add(faRefresh)
 
@@ -52,12 +53,16 @@ export class CalendarElement {
   }
 
   public create = async (
-    sources: (ServerSource | CalendarSource)[],
+    calendarSources: (ServerSource | CalendarSource)[],
+    addressBookSources: (ServerSource | AddressBookSource)[],
     target: Element,
     options?: CalendarOptions,
   ) => {
     if (this._calendar) return
-    await this._client.loadCalendars(sources)
+    await Promise.all([
+      this._client.loadCalendars(calendarSources),
+      this._client.loadAddressBooks(addressBookSources),
+    ])
     this._selectedCalendars = new Set(this._client.getCalendars().map(c => c.url))
 
     this._eventEditHandlers = options && hasEventHandlers(options)
@@ -66,7 +71,7 @@ export class CalendarElement {
         onUpdateEvent: options.onUpdateEvent,
         onDeleteEvent: options.onDeleteEvent,
       }
-      : this.createDefaultEventEdit(target)
+      : this.createDefaultEventEdit(target, options ?? {})
 
     this._calendarSelectHandlers = options && hasCalendarHandlers(options)
       ? {
@@ -83,7 +88,7 @@ export class CalendarElement {
     this.createCalendar(target, options)
 
     this._bodyHandlers = {
-      getEventBody: options?.getEventBody ?? this.createDefaultEventBody(),
+      getEventBody: options?.getEventBody ?? this.createDefaultEventBody(options ?? {}),
     }
   }
 
@@ -159,8 +164,8 @@ export class CalendarElement {
     this._target = null
   }
 
-  private createDefaultEventEdit = (target: Node): EventEditHandlers => {
-    this._eventEdit ??= new EventEditPopup(target)
+  private createDefaultEventEdit = (target: Node, options: DefaultComponentsOptions): EventEditHandlers => {
+    this._eventEdit ??= new EventEditPopup(target, options)
     return {
       onCreateEvent: this._eventEdit.onCreate,
       onUpdateEvent: this._eventEdit.onUpdate,
@@ -185,8 +190,8 @@ export class CalendarElement {
     this._calendarSelect = null
   }
 
-  private createDefaultEventBody = (): (info: EventBodyInfo) => Node[] => {
-    this._eventBody ??= new EventBody()
+  private createDefaultEventBody = (options: DefaultComponentsOptions): (info: EventBodyInfo) => Node[] => {
+    this._eventBody ??= new EventBody(options)
     return this._eventBody.getBody
   }
 
@@ -195,7 +200,10 @@ export class CalendarElement {
   }
 
   private fetchAndLoadEvents = async (info: EventCalendar.FetchInfo): Promise<EventCalendar.EventInput[]> => {
-    const calendarEvents = await this._client.fetchAndLoadEvents(info.startStr, info.endStr)
+    const [calendarEvents] = await Promise.all([
+      this._client.fetchAndLoadEvents(info.startStr, info.endStr),
+      this._client.fetchAndLoadVCards(),
+    ])
     return calendarEvents.map(({ event, calendarUrl }) => {
       const allDay = isEventAllDay(event)
       return {
@@ -225,11 +233,14 @@ export class CalendarElement {
   }
 
   private getEventContent = ({ event, view }: EventCalendar.EventContentInfo): EventCalendar.Content => {
-    const calendarEvent = this._client.getCalendarEvent(event.extendedProps as EventUid)!
+    const calendarEvent = this._client.getCalendarEvent(event.extendedProps as EventUid)
+    // NOTE - CJ - 2025-11-07 - calendarEvent can be undefined when creating events
+    if (calendarEvent === undefined) return {html: ''}
     const calendar = this._client.getCalendarByUrl(calendarEvent.calendarUrl)!
     return {
       domNodes: this._bodyHandlers!.getEventBody({
         event: calendarEvent.event,
+        vCards: this._client.getAddressBookVCards(),
         calendar,
         view: view.type as View,
       }),
@@ -281,6 +292,7 @@ export class CalendarElement {
       jsEvent,
       calendars: this._client.getCalendars(),
       event: newEvent,
+      vCards: this._client.getAddressBookVCards(),
       handleCreate: this.handleCreateEvent,
     })
   }
@@ -311,6 +323,7 @@ export class CalendarElement {
     this._eventEditHandlers!.onUpdateEvent({
       jsEvent,
       calendars: this._client.getCalendars(),
+      vCards: this._client.getAddressBookVCards(),
       ...calendarEvent,
       handleUpdate: this.handleUpdateEvent,
       handleDelete: this.handleDeleteEvent,

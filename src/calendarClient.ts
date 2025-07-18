@@ -1,7 +1,11 @@
 import { type IcsCalendar, type IcsEvent } from 'ts-ics'
-import { createCalendarObject, deleteCalendarObject, fetchCalendarObjects, fetchCalendars, updateCalendarObject } from './helpers/dav-helper'
-import type { CalendarSource, ServerSource, Calendar, CalendarObject, EventUid, CalendarEvent, DisplayedCalendarEvent } from './types'
+import { createCalendarObject, deleteCalendarObject, fetchAddressBooks, fetchCalendarObjects, fetchCalendars, fetchAddressBookObjects, updateCalendarObject } from './helpers/dav-helper'
 import { isRRuleSourceEvent, isSameEvent, offsetDate } from './helpers/ics-helper'
+import type { CalendarSource, ServerSource, AddressBookSource } from './types/options'
+import type { Calendar, CalendarEvent, CalendarObject, DisplayedCalendarEvent, EventUid } from './types/calendar'
+import type { AddressBook, AddressBookVCard, AddressBookObject } from './types/addressbook'
+import { VCard } from './VCard'
+import { isServerSource } from './helpers/types-helper'
 
 export class CalendarClient {
 
@@ -15,18 +19,40 @@ export class CalendarClient {
   private _recurringObjects: CalendarObject[] = []
   private _lastFetchNumber = 0
 
+  private _addressBooks: AddressBook[] = []
+  private _addressBookObjects: AddressBookObject[] = []
+
   public loadCalendars = async (sources: (ServerSource | CalendarSource)[]) => {
-    const calendarsPerSource = await Promise.all(sources.map(source => fetchCalendars(source)))
+    const calendarsPerSource = await Promise.all(sources.map(async source => {
+      try {
+        return await fetchCalendars(source)
+      } catch (error) {
+        const url = isServerSource(source) ? source.serverUrl : source.calendarUrl
+        console.error(`Could not fetch calendars from ${url}. ${error}`)
+        return []
+      }
+    }))
     this._calendars = calendarsPerSource.flat()
   }
 
   public getCalendars = () => this._calendars
 
+  public getCalendarByUrl = (url: string): Calendar | undefined => {
+    return this._calendars.find(c => c.url === url)
+  }
+
   public fetchAndLoadEvents = async (start: string, end: string): Promise<CalendarEvent[]> => {
     this._lastFetchNumber++
     const currentFetchNumber = this._lastFetchNumber
     const allObjects = await Promise.all(
-      this._calendars.map(calendar => fetchCalendarObjects(calendar, { start, end }, true)),
+      this._calendars.map(async calendar => {
+        try {
+          return await fetchCalendarObjects(calendar, { start, end }, true)
+        } catch (error) {
+          console.error(`Could not fetch events from ${calendar.url}. ${error}`)
+          return { calendarObjects: [], recurringObjects: [] }
+        }
+      }),
     )
     // NOTE - CJ - 2025-07-15 - only update the objects if this is the latest fetch
     // This can happen if this fetch took more time than the last one
@@ -44,7 +70,7 @@ export class CalendarClient {
   private getCalendarEventsFromCalendarObjects = (calendarObjects: CalendarObject[]): CalendarEvent[] => {
     return calendarObjects.flatMap(co => {
       const events = co.data.events ?? []
-      return events.map(event => ({ event: event, calendarUrl: co.calendarUrl }))
+      return events.map(event => ({ event, calendarUrl: co.calendarUrl }))
     })
   }
 
@@ -81,9 +107,6 @@ export class CalendarClient {
     return undefined
   }
 
-  public getCalendarByUrl = (url: string): Calendar | undefined => {
-    return this._calendars.find(c => c.url === url)
-  }
 
   public createEvent = async ({ calendarUrl, event }: CalendarEvent) => {
     const calendar = this.getCalendarByUrl(calendarUrl)
@@ -170,5 +193,42 @@ export class CalendarClient {
 
     if (!response.response.ok) calendarObject.data.events = oldEvents
     return response
+  }
+
+  public loadAddressBooks = async (sources: (ServerSource | AddressBookSource)[]) => {
+    const addressBooksPerSources = await Promise.all(sources.map(async source => {
+      try {
+        return await fetchAddressBooks(source)
+      } catch (error) {
+        const url = isServerSource(source) ? source.serverUrl : source.addressBookUrl
+        console.error(`Could not fetch address books from ${url}. ${error}`)
+        return []
+      }
+    }))
+    this._addressBooks = addressBooksPerSources.flat()
+  }
+
+  public fetchAndLoadVCards = async (): Promise<AddressBookVCard[]> => {
+    const vCards = await Promise.all(
+      this._addressBooks.map(async book => {
+        try {
+          return await fetchAddressBookObjects(book)
+        } catch (error) {
+          console.error(`Could not fetch vcards objects from ${book.url}. ${error}`)
+          return []
+        }
+      }),
+    )
+    this._addressBookObjects = vCards.flat()
+    return this.getAddressBookVCards()
+  }
+
+  public getAddressBookVCards = (): AddressBookVCard[] => {
+    return this.getAddressBookVCardsFromObjects(this._addressBookObjects)
+  }
+
+  private getAddressBookVCardsFromObjects = (addressBookObjects: AddressBookObject[]): AddressBookVCard[] => {
+    // NOTE - CJ - 2025-07-16 - radicale does not accepts vcf files with more than one vcard component
+    return addressBookObjects.map(ao => ({ vCard: new VCard(ao.data), addressBookUrl: ao.addressBookUrl }))
   }
 }
