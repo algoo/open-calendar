@@ -1,4 +1,4 @@
-import { convertIcsRecurrenceRule, getEventEndFromDuration, type IcsAttendee, type IcsDateObject, type IcsEvent } from 'ts-ics'
+import { convertIcsRecurrenceRule, getEventEndFromDuration, type IcsAttendee, type IcsDateObject, type IcsEvent, type IcsOrganizer } from 'ts-ics'
 import './eventEditPopup.css'
 import { Popup } from '../popup/popup'
 import { parseHtml } from '../helpers/dom-helper'
@@ -189,7 +189,7 @@ export class EventEditPopup {
 
   private addAttendee = (attendee: IcsAttendee) => {
     const element = parseHtml<HTMLDivElement>(attendeeHtml, {
-      mailbox: this.getValueFromContact(attendee),
+      mailbox: this.getValueFromAttendee(attendee),
       role: attendee.role || 'REQ-PARTICIPANT',
       roles: attendeeRoleTypes.map(role => ({ key: role, translation: getTranslations().attendeeRoles[role] })),
       t: getTranslations().eventForm,
@@ -279,7 +279,7 @@ export class EventEditPopup {
     // TODO - CJ - 2025-07-03 - Check if needs to be hidden or done differently,
     // as I believe Thunderbird also adds the organizer to the attendee list;
     (inputs.namedItem('organizer-mailbox') as HTMLInputElement).value = event.organizer
-      ? this.getValueFromContact(event.organizer)
+      ? this.getValueFromAttendee(event.organizer)
       : ''
 
     const rrule =  getRRuleString(event.recurrenceRule)
@@ -355,18 +355,19 @@ export class EventEditPopup {
   }
 
   public getContactFromValue = (value: string) => {
-    const contact = this._vCardContacts.find(c => (this._hideVCardEmails ? c.name : contactToMailbox(c)) === value )
+    const contact = this._vCardContacts.find(c => this.getValueFromVCard(c) === value)
     return contact
       // NOTE - CJ - 2025-07-17 - we need to reconstruct an object as the spread syntax does not work for properties
       ? { name: contact.name!, email: contact.email!}
-      : this._eventContacts.find(c => contactToMailbox(c) === value)
+      : this._eventContacts.find(c => this.getValueFromContact(c) === value)
       ?? mailboxToContact(value)
   }
 
-  public getValueFromVCard = (contact: VCard) => {
-    return this._hideVCardEmails ? contact.name ?? contactToMailbox(contact) : contactToMailbox(contact)
+  public getValueFromAttendee = (attendee: IcsAttendee | IcsOrganizer): string => {
+    const vCard = this._vCardContacts.find(c => isSameContact(c, attendee))
+    return vCard ? this.getValueFromVCard(vCard) : this.getValueFromContact(attendee)
   }
-  public getValueFromContact = (contact: Contact) => {
-    return contactToMailbox(contact)
-  }
+
+  public getValueFromVCard = (contact: VCard) => (this._hideVCardEmails && contact.name) || contactToMailbox(contact)
+  public getValueFromContact = (contact: Contact) => contactToMailbox(contact)
 }
