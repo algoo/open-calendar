@@ -13,7 +13,7 @@ import { CalendarClient } from '../calendarClient'
 import { getTranslations } from '../translations'
 import { EventBody } from '../eventBody/eventBody'
 import { TIME_MINUTE, TIME_DAY } from '../constants'
-import type { AddressBookSource, BodyHandlers, CalendarOptions, CalendarSource, DefaultEventEditOptions, DomEvent, EventBodyInfo, EventChangeHandlers, EventEditHandlers, SelectCalendarHandlers, SelectedCalendar, ServerSource, View } from '../types/options'
+import type { AddressBookSource, BodyHandlers, CalendarOptions, CalendarSource, DefaultComponentsOptions, DomEvent, EventBodyInfo, EventChangeHandlers, EventEditHandlers, SelectCalendarHandlers, SelectedCalendar, ServerSource, View } from '../types/options'
 import type { CalendarEvent, EventUid } from '../types/calendar'
 
 library.add(faRefresh)
@@ -88,7 +88,7 @@ export class CalendarElement {
     this.createCalendar(target, options)
 
     this._bodyHandlers = {
-      getEventBody: options?.getEventBody ?? this.createDefaultEventBody(),
+      getEventBody: options?.getEventBody ?? this.createDefaultEventBody(options ?? {}),
     }
   }
 
@@ -164,7 +164,7 @@ export class CalendarElement {
     this._target = null
   }
 
-  private createDefaultEventEdit = (target: Node, options: DefaultEventEditOptions): EventEditHandlers => {
+  private createDefaultEventEdit = (target: Node, options: DefaultComponentsOptions): EventEditHandlers => {
     this._eventEdit ??= new EventEditPopup(target, options)
     return {
       onCreateEvent: this._eventEdit.onCreate,
@@ -190,8 +190,8 @@ export class CalendarElement {
     this._calendarSelect = null
   }
 
-  private createDefaultEventBody = (): (info: EventBodyInfo) => Node[] => {
-    this._eventBody ??= new EventBody()
+  private createDefaultEventBody = (options: DefaultComponentsOptions): (info: EventBodyInfo) => Node[] => {
+    this._eventBody ??= new EventBody(options)
     return this._eventBody.getBody
   }
 
@@ -240,6 +240,7 @@ export class CalendarElement {
     return {
       domNodes: this._bodyHandlers!.getEventBody({
         event: calendarEvent.event,
+        vCards: this._client.getAddressBookVCards(),
         calendar,
         view: view.type as View,
       }),

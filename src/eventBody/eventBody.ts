@@ -3,10 +3,11 @@ import Autolinker from 'autolinker'
 import { icon, library } from '@fortawesome/fontawesome-svg-core'
 import { faRepeat, faBell } from '@fortawesome/free-solid-svg-icons'
 import './eventBody.css'
-import { contactToMailbox, isEventAllDay } from '../helpers/ics-helper'
-import type { IcsAttendeePartStatusType } from 'ts-ics'
+import { contactToMailbox, isEventAllDay, isSameContact } from '../helpers/ics-helper'
+import type { IcsAttendee, IcsAttendeePartStatusType, IcsOrganizer } from 'ts-ics'
 import { getTranslations } from '../translations'
-import type { EventBodyInfo, IcsAttendeeRoleType } from '../types/options'
+import type { DefaultComponentsOptions, EventBodyInfo, IcsAttendeeRoleType } from '../types/options'
+import type { AddressBookVCard } from '../types/addressbook'
 
 library.add(faRepeat, faBell)
 
@@ -49,7 +50,13 @@ const html = /*html*/`
 
 export class EventBody {
 
-  public getBody = ({ event }: EventBodyInfo) => {
+  private _hideVCardEmails?: boolean
+
+  public constructor(options: DefaultComponentsOptions) {
+    this._hideVCardEmails = options.hideVCardEmails
+  }
+
+  public getBody = ({ event, vCards }: EventBodyInfo) => {
     const time = event.start.date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
     return Array.from(parseHtml(html, {
       time: isEventAllDay(event) ? undefined : time,
@@ -60,11 +67,11 @@ export class EventBody {
       ],
       location: event.location ? Autolinker.link(escapeHtml(event.location)) : undefined,
       organizer: event.organizer ? {
-        mailbox: contactToMailbox(event.organizer),
+        mailbox: this.getAttendeeValue(vCards ,event.organizer),
         name: event.organizer.name ?? event.organizer.email,
       } : undefined,
       attendees: event.attendees ? event.attendees.map(a => ({
-        mailbox: contactToMailbox(a),
+        mailbox: this.getAttendeeValue(vCards ,a),
         name: a.name ?? a.email,
         role: ((a.role as IcsAttendeeRoleType) ?? 'NON-PARTICIPANT').toLowerCase(),
         tRole: getTranslations().attendeeRoles[(a.role as IcsAttendeeRoleType) ?? 'NON-PARTICIPANT'],
@@ -73,5 +80,10 @@ export class EventBody {
       })) : undefined,
       t: getTranslations().eventBody,
     }))
+  }
+
+  public getAttendeeValue(vCards: AddressBookVCard[], attendee: IcsAttendee | IcsOrganizer) {
+    const vCard = vCards.find(c => isSameContact(c.vCard, attendee))?.vCard
+    return (this._hideVCardEmails && vCard?.name) || contactToMailbox(attendee)
   }
 }

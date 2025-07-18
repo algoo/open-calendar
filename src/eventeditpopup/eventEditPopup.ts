@@ -8,7 +8,7 @@ import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
 import { TIME_MINUTE } from '../constants'
 import type { AddressBookVCard, Contact } from '../types/addressbook'
-import type { DefaultEventEditOptions, DomEvent, EventEditCallback, EventEditCreateInfo, EventEditDeleteInfo, EventEditUpdateInfo } from '../types/options'
+import type { DefaultComponentsOptions, DomEvent, EventEditCallback, EventEditCreateInfo, EventEditDeleteInfo, EventEditUpdateInfo } from '../types/options'
 import type { Calendar } from '../types/calendar'
 import { attendeeRoleTypes, namedRRules } from '../contants'
 import type { VCard } from '../VCard'
@@ -116,7 +116,7 @@ export class EventEditPopup {
   private _handleSave: EventEditCallback | null = null
   private _handleDelete: EventEditCallback | null = null
 
-  public constructor(target: Node, options: DefaultEventEditOptions) {
+  public constructor(target: Node, options: DefaultComponentsOptions) {
     this._hideVCardEmails = options.hideVCardEmails
     const timezones = tzlib_get_timezones() as string[]
 

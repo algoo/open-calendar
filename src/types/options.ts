@@ -52,6 +52,7 @@ export type SelectCalendarHandlers = {
 
 export type EventBodyInfo = {
   calendar: Calendar
+  vCards: AddressBookVCard[]
   event: IcsEvent
   view: View
 }
@@ -111,7 +112,7 @@ export type CalendarElementOptions = {
   editable?: boolean
 }
 
-export type DefaultEventEditOptions = {
+export type DefaultComponentsOptions = {
   hideVCardEmails?: boolean
 }
 
@@ -122,11 +123,12 @@ export type CalendarOptions =
   // Must define all handlers or none
   & (SelectCalendarHandlers | Record<never, never>)
   // Must define all handlers or none
-  & (EventEditHandlers | DefaultEventEditOptions)
+  & (EventEditHandlers | Record<never, never>)
   // May define individual handlers or not
   & EventChangeHandlers
   // May define handlers or not, but they will be assigned a default value if they are not
   & Partial<BodyHandlers>
+  & DefaultComponentsOptions
 
 export type CalendarResponse = {
   response: Response
