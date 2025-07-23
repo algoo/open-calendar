@@ -36,6 +36,7 @@ const en = {
     'email': 'email',
     'rrule': 'Frequency',
     'name': 'name',
+    'userInvite': 'You were invited to this event',
   },
   'eventBody': {
     'organizer': 'Organizer',
@@ -51,6 +52,12 @@ const en = {
     'DECLINED': 'Declined',
     'TENTATIVE': 'Tentatively accepted',
     'DELEGATED': 'Delegated',
+  },
+  'userPartStatus': {
+    'NEEDS-ACTION': 'Not answered',
+    'ACCEPTED': 'Accept',
+    'DECLINED': 'Decline',
+    'TENTATIVE': 'Accept tentatively',
   },
   'attendeeRoles': {
     'CHAIR': 'Chair',
@@ -90,6 +97,10 @@ export const setTranslations = (bundle: RecursivePartial<ResourceBundle>) => tra
   recurringForm: {
     ...en.recurringForm,
     ...bundle.recurringForm,
+  },
+  userPartStatus: {
+    ...en.userPartStatus,
+    ...bundle.userPartStatus,
   },
   partStatus: {
     ...en.partStatus,
