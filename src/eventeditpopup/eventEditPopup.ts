@@ -1,4 +1,4 @@
-import { convertIcsRecurrenceRule, getEventEndFromDuration, type IcsAttendee, type IcsDateObject, type IcsEvent } from 'ts-ics'
+import { attendeePartStatusTypes, convertIcsRecurrenceRule, getEventEndFromDuration, type IcsAttendee, type IcsAttendeePartStatusType, type IcsDateObject, type IcsEvent } from 'ts-ics'
 import './eventEditPopup.css'
 import { attendeeRoleTypes, namedRRules, type Calendar, type DomEvent, type EventEditCallback, type EventEditCreateInfo, type EventEditDeleteInfo, type EventEditUpdateInfo } from '../types'
 import { Popup } from '../popup/popup'
@@ -85,6 +85,11 @@ const attendeeHtml = /*html*/`
       <option value="{{key}}">{{translation}}</option>
     {{/roles}}
   </select>
+  <select name="partStat" value="{{partStat}}" required>
+    {{#partStats}}
+      <option value="{{key}}">{{translation}}</option>
+    {{/partStats}}
+  </select>
   <button type="button" name="remove">X</button>
 </div>`
 
@@ -155,6 +160,8 @@ export class EventEditPopup {
       ...attendee,
       role: attendee.role || 'REQ-PARTICIPANT',
       roles: attendeeRoleTypes.map(role => ({ key: role, translation: getTranslations().attendeeRoles[role] })),
+      partStat: attendee.partstat || 'NEEDS-ACTION',
+      partStats: attendeePartStatusTypes.map(stat => ({key: stat, translation: getTranslations().partStatus[stat] })),
       t: getTranslations().eventForm,
     })[0]
     this._attendees.appendChild(element)
@@ -272,6 +279,7 @@ export class EventEditPopup {
     const emails = data.getAll('email') as string[]
     const names = data.getAll('name') as string[]
     const roles = data.getAll('role') as string[]
+    const partStats = data.getAll('partStat') as string[]
     const rrule = data.get('rrule') as string
     const description = data.get('description') as string
 
@@ -294,6 +302,7 @@ export class EventEditPopup {
         email: e,
         name: names[i],
         role: roles[i],
+        partstat: partStats[i] as IcsAttendeePartStatusType,
       })) || undefined,
       recurrenceRule: rrule ? convertIcsRecurrenceRule(undefined, {value: rrule}) : undefined,
 
