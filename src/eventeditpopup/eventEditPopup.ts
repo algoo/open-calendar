@@ -64,8 +64,8 @@ const html = /*html*/`
     <textarea id="open-calendar__event-edit__description" name="description"> </textarea>
   </div>
   <div class="open-calendar__form__content open-calendar__event-edit__invite">
-    <label for="open-calendar__event-edit__attendees">{{t.userInvite}}</label>
-    <select name="user-partStat">
+    <label for="open-calendar__event-edit__user-partStat">{{t.userInvite}}</label>
+    <select id="open-calendar__event-edit__user-partStat" name="user-partStat">
       {{#partStats}}
         <option value="{{key}}">{{translation}}</option>
       {{/partStats}}
