@@ -1,4 +1,4 @@
-import { generateIcsRecurrenceRule, type IcsAttendee, type IcsDateObject, type IcsEvent, type IcsRecurrenceRule } from 'ts-ics'
+import { generateIcsRecurrenceRule, type IcsDateObject, type IcsEvent, type IcsRecurrenceRule } from 'ts-ics'
 import type { EventUid } from '../types'
 
 export function isEventAllDay(event: IcsEvent) {
@@ -28,8 +28,4 @@ export function isRRuleSourceEvent(eventInstance: EventUid, event: EventUid) {
 export function getRRuleString(recurrenceRule?: IcsRecurrenceRule) {
   if (!recurrenceRule) return ''
   return generateIcsRecurrenceRule(recurrenceRule).trim().slice(6)
-}
-
-export function findIcsAttendee(event: IcsEvent, email: string): IcsAttendee | undefined {
-  return event.attendees?.find(a => a.email === email)
 }

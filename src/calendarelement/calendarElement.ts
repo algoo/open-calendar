@@ -1,10 +1,30 @@
-import { createCalendar as createEventCalendar, DayGrid, TimeGrid, List, Interaction, destroyCalendar as destroyEventCalendar } from '@event-calendar/core'
+import { createCalendar as createEventCalendar,
+  DayGrid,
+  TimeGrid,
+  List,
+  Interaction,
+  destroyCalendar as destroyEventCalendar,
+} from '@event-calendar/core'
 import type { Calendar as EventCalendar } from '@event-calendar/core'
 import '@event-calendar/core/index.css'
 import { getEventEnd, type IcsEvent } from 'ts-ics'
 import { EventEditPopup } from '../eventeditpopup/eventEditPopup'
 import { hasCalendarHandlers, hasEventHandlers } from '../helpers/types-helper'
-import type { CalendarOptions, CalendarSource, ServerSource, EventUid, EventEditHandlers, CalendarEvent, EventChangeHandlers, SelectCalendarHandlers, SelectedCalendar, View, BodyHandlers, EventBodyInfo, DomEvent, Contact } from '../types'
+import type { CalendarOptions,
+  CalendarSource,
+  ServerSource,
+  EventUid,
+  EventEditHandlers,
+  CalendarEvent,
+  EventChangeHandlers,
+  SelectCalendarHandlers,
+  SelectedCalendar,
+  View,
+  BodyHandlers,
+  EventBodyInfo,
+  DomEvent,
+  Contact,
+} from '../types'
 import { isEventAllDay, offsetDate } from '../helpers/ics-helper'
 import './calendarElement.css'
 import { CalendarSelectDropdown } from '../calendarselectdropdown/calendarSelectDropdown'

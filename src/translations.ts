@@ -46,14 +46,14 @@ const en = {
     'editAll': 'Edit all occurrences',
     'editSingle': 'Edit this occurrence only',
   },
-  'partStatus': {
+  'participationStatus': {
     'NEEDS-ACTION': 'Needs to answer',
     'ACCEPTED': 'Accepted',
     'DECLINED': 'Declined',
     'TENTATIVE': 'Tentatively accepted',
     'DELEGATED': 'Delegated',
   },
-  'userPartStatus': {
+  'userParticipationStatus': {
     'NEEDS-ACTION': 'Not answered',
     'ACCEPTED': 'Accept',
     'DECLINED': 'Decline',
@@ -98,13 +98,13 @@ export const setTranslations = (bundle: RecursivePartial<ResourceBundle>) => tra
     ...en.recurringForm,
     ...bundle.recurringForm,
   },
-  userPartStatus: {
-    ...en.userPartStatus,
-    ...bundle.userPartStatus,
+  userParticipationStatus: {
+    ...en.userParticipationStatus,
+    ...bundle.userParticipationStatus,
   },
-  partStatus: {
-    ...en.partStatus,
-    ...bundle.partStatus,
+  participationStatus: {
+    ...en.participationStatus,
+    ...bundle.participationStatus,
   },
   attendeeRoles: {
     ...en.attendeeRoles,
