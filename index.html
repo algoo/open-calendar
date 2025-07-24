@@ -19,6 +19,11 @@
     createCalendar(
       [{ serverUrl: "http://localhost:5232", headers: getBasicAuthHeaders({ username, password }) }],
       document.getElementById("open-calendar"),
+      {
+        userContact: {
+          email: username
+        }
+      }
     )
   </script>
 </body>

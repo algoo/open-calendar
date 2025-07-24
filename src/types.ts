@@ -112,12 +112,14 @@ export type BodyHandlers = {
 export type EventEditCallback = (event: CalendarEvent) => Promise<Response>
 export type EventEditCreateInfo = {
   jsEvent: DomEvent
+  userContact?: Contact,
   event: IcsEvent
   calendars: Calendar[]
   handleCreate: EventEditCallback
 }
 export type EventEditUpdateInfo = {
   jsEvent: DomEvent
+  userContact?: Contact,
   calendarUrl: string
   event: IcsEvent
   recurringEvent?: IcsEvent
@@ -127,6 +129,7 @@ export type EventEditUpdateInfo = {
 }
 export type EventEditDeleteInfo = {
   jsEvent: DomEvent
+  userContact?: Contact,
   calendarUrl: string
   event: IcsEvent
   recurringEvent?: IcsEvent
@@ -159,10 +162,16 @@ export type CalendarElementOptions = {
   editable?: boolean
 }
 
+export type CalendarClientOptions = {
+  userContact?: Contact
+}
+
 export type CalendarOptions =
   // NOTE - CJ - 2025-07-03
   // May define individual options or not
   CalendarElementOptions
+  // May define individual options or not
+  & CalendarClientOptions
   // Must define all handlers or none
   & (SelectCalendarHandlers | Record<never, never>)
   // Must define all handlers or none
@@ -175,4 +184,10 @@ export type CalendarOptions =
 export type CalendarResponse = {
   response: Response
   ical: string
+}
+
+
+export type Contact = {
+  name?: string
+  email: string
 }

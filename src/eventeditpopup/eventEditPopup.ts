@@ -1,17 +1,33 @@
-import { convertIcsRecurrenceRule, getEventEndFromDuration, type IcsAttendee, type IcsDateObject, type IcsEvent } from 'ts-ics'
+import { attendeePartStatusTypes,
+  convertIcsRecurrenceRule,
+  getEventEndFromDuration,
+  type IcsAttendee,
+  type IcsAttendeePartStatusType,
+  type IcsDateObject,
+  type IcsEvent,
+} from 'ts-ics'
 import './eventEditPopup.css'
-import { attendeeRoleTypes, namedRRules, type Calendar, type DomEvent, type EventEditCallback, type EventEditCreateInfo, type EventEditDeleteInfo, type EventEditUpdateInfo } from '../types'
+import { attendeeRoleTypes,
+  namedRRules,
+  type Calendar,
+  type Contact,
+  type DomEvent,
+  type EventEditCallback,
+  type EventEditCreateInfo,
+  type EventEditDeleteInfo,
+  type EventEditUpdateInfo,
+} from '../types'
 import { Popup } from '../popup/popup'
 import { parseHtml } from '../helpers/dom-helper'
 import { getRRuleString, isEventAllDay, offsetDate } from '../helpers/ics-helper'
 import { tzlib_get_ical_block, tzlib_get_offset, tzlib_get_timezones } from 'timezones-ical-library'
 import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
-import { TIME_MINUTE } from '../constants'
+import { attendeeUserParticipationStatusTypes, TIME_MINUTE } from '../constants'
 
 const html = /*html*/`
 <form name="event" class="open-calendar__event-edit open-calendar__form">
-  <div class="open-calendar__form__content">
+  <div class="open-calendar__form__content open-calendar__event-edit__event">
     <label for="open-calendar__event-edit__calendar">{{t.calendar}}</label>
     <select id="open-calendar__event-edit__calendar" name="calendar" required="">
 
@@ -63,6 +79,14 @@ const html = /*html*/`
     <label for="open-calendar__event-edit__description">{{t.description}}</label>
     <textarea id="open-calendar__event-edit__description" name="description"> </textarea>
   </div>
+  <div class="open-calendar__form__content open-calendar__event-edit__invite">
+    <label for="open-calendar__event-edit__user-participation-status">{{t.userInvite}}</label>
+    <select id="open-calendar__event-edit__user-participation-status" name="user-participation-status">
+      {{#userParticipationStatuses}}
+        <option value="{{key}}">{{translation}}</option>
+      {{/userParticipationStatuses}}
+    </select>
+  </div>
   <div class="open-calendar__form__buttons">
     <button name="delete" type="button">{{t.delete}}</button>
     <button name="cancel" type="button">{{t.cancel}}</button>
@@ -85,6 +109,11 @@ const attendeeHtml = /*html*/`
       <option value="{{key}}">{{translation}}</option>
     {{/roles}}
   </select>
+  <select name="participation-status" value="{{participationStatus}}" required disabled>
+    {{#participationStatuses}}
+      <option value="{{key}}">{{translation}}</option>
+    {{/participationStatuses}}
+  </select>
   <button type="button" name="remove">X</button>
 </div>`
 
@@ -98,6 +127,7 @@ export class EventEditPopup {
   private _rruleUnchanged: HTMLOptionElement
 
   private _event?: IcsEvent
+  private _userContact?: Contact
   private _calendarUrl?: string
   private _handleSave: EventEditCallback | null = null
   private _handleDelete: EventEditCallback | null = null
@@ -112,7 +142,11 @@ export class EventEditPopup {
       t: getTranslations().eventForm,
       trrules: getTranslations().rrules,
       timezones: timezones,
-      rrules: namedRRules.map(rule => ({ rule, label: getTranslations().rrules[rule]})),
+      rrules: namedRRules.map(rule => ({ rule, label: getTranslations().rrules[rule] })),
+      userParticipationStatuses: attendeeUserParticipationStatusTypes.map(stat => ({
+        key: stat,
+        translation: getTranslations().userParticipationStatus[stat],
+      })),
     })[0]
     this._popup.content.appendChild(this._form)
 
@@ -155,22 +189,29 @@ export class EventEditPopup {
       ...attendee,
       role: attendee.role || 'REQ-PARTICIPANT',
       roles: attendeeRoleTypes.map(role => ({ key: role, translation: getTranslations().attendeeRoles[role] })),
+      participationStatus: attendee.partstat || 'NEEDS-ACTION',
+      participationStatuses: attendeePartStatusTypes.map(status => ({
+        key: status,
+        translation: getTranslations().participationStatus[status],
+      })),
       t: getTranslations().eventForm,
     })[0]
     this._attendees.appendChild(element)
 
     const remove = element.querySelector<HTMLButtonElement>('button')!
     const role = element.querySelector<HTMLSelectElement>('select[name="role"]')!
+    const participationStatus = element.querySelector<HTMLSelectElement>('select[name="participation-status"]')!
 
     remove.addEventListener('click', () => element.remove())
     role.value = attendee.role || 'REQ-PARTICIPANT'
+    participationStatus.value = attendee.partstat || 'NEEDS-ACTION'
   }
 
-  public onCreate = ({calendars, event, handleCreate}: EventEditCreateInfo) => {
+  public onCreate = ({calendars, event, handleCreate, userContact}: EventEditCreateInfo) => {
     this._form.classList.toggle('open-calendar__event-edit--create', true)
     this._handleSave = handleCreate
     this._handleDelete = null
-    this.open('', event, calendars)
+    this.open('', event, calendars, userContact)
   }
   public onUpdate = ({
     calendarUrl,
@@ -179,19 +220,22 @@ export class EventEditPopup {
     recurringEvent,
     handleDelete,
     handleUpdate,
+    userContact,
   }: EventEditUpdateInfo) => {
     this._form.classList.toggle('open-calendar__event-edit--create', false)
     this._handleSave = handleUpdate
     this._handleDelete = handleDelete
-    if (!recurringEvent) this.open(calendarUrl, event, calendars)
-    else this._recurringPopup.open(editAll => this.open(calendarUrl, editAll ? recurringEvent : event, calendars))
+    if (!recurringEvent) this.open(calendarUrl, event, calendars, userContact)
+    else this._recurringPopup.open(editAll => this.open(
+      calendarUrl, editAll ? recurringEvent : event, calendars, userContact,
+    ))
   }
   public onDelete = ({calendarUrl, event, handleDelete}: EventEditDeleteInfo) => {
     handleDelete({calendarUrl, event})
   }
 
-  public open = (calendarUrl: string, event: IcsEvent, calendars: Calendar[]) => {
-
+  public open = (calendarUrl: string, event: IcsEvent, calendars: Calendar[], userContact?: Contact) => {
+    this._userContact = userContact
     this.setCalendars(calendars)
 
     this._calendarUrl = calendarUrl
@@ -243,6 +287,20 @@ export class EventEditPopup {
     (inputs.namedItem('rrule') as HTMLInputElement).value = rrule;
     (inputs.namedItem('rrule') as HTMLInputElement).disabled = event.recurrenceId !== undefined
 
+    const userAttendeeInEvent = userContact !== undefined
+      ? event.attendees?.find(a => a.email === userContact.email)
+      : undefined
+
+    if (userAttendeeInEvent !== undefined) {
+      this._form.classList.remove('open-calendar__event-edit--without-invite');
+      (inputs.namedItem('user-participation-status') as HTMLSelectElement).value =
+        userAttendeeInEvent.partstat
+        ?? attendeeUserParticipationStatusTypes[0]
+    } else {
+      this._form.classList.add('open-calendar__event-edit--without-invite')
+    }
+
+
     this._attendees.innerHTML = ''
     for (const attendee of event.attendees ?? []) this.addAttendee(attendee)
 
@@ -272,6 +330,7 @@ export class EventEditPopup {
     const emails = data.getAll('email') as string[]
     const names = data.getAll('name') as string[]
     const roles = data.getAll('role') as string[]
+    const participationStatuses = data.getAll('participation-status') as string[]
     const rrule = data.get('rrule') as string
     const description = data.get('description') as string
 
@@ -294,6 +353,10 @@ export class EventEditPopup {
         email: e,
         name: names[i],
         role: roles[i],
+        partstat: (e === this._userContact?.email
+          ? data.get('user-participation-status')
+          : participationStatuses[i]
+        ) as IcsAttendeePartStatusType,
       })) || undefined,
       recurrenceRule: rrule ? convertIcsRecurrenceRule(undefined, {value: rrule}) : undefined,
 

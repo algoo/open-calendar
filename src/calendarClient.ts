@@ -1,6 +1,18 @@
 import { type IcsCalendar, type IcsEvent } from 'ts-ics'
-import { createCalendarObject, deleteCalendarObject, fetchCalendarObjects, fetchCalendars, updateCalendarObject } from './helpers/dav-helper'
-import type { CalendarSource, ServerSource, Calendar, CalendarObject, EventUid, CalendarEvent, DisplayedCalendarEvent } from './types'
+import { createCalendarObject,
+  deleteCalendarObject,
+  fetchCalendarObjects,
+  fetchCalendars,
+  updateCalendarObject,
+} from './helpers/dav-helper'
+import type { CalendarSource,
+  ServerSource,
+  Calendar,
+  CalendarObject,
+  EventUid,
+  CalendarEvent,
+  DisplayedCalendarEvent,
+} from './types'
 import { isRRuleSourceEvent, isSameEvent, offsetDate } from './helpers/ics-helper'
 
 export class CalendarClient {
