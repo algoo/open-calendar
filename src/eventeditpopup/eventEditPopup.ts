@@ -287,11 +287,11 @@ export class EventEditPopup {
     (inputs.namedItem('rrule') as HTMLInputElement).value = rrule;
     (inputs.namedItem('rrule') as HTMLInputElement).disabled = event.recurrenceId !== undefined
 
-    const userAttendeeInEvent = this._userContact
-      ? event.attendees?.find(a => a.email === this._userContact!.email)
+    const userAttendeeInEvent = userContact !== undefined
+      ? event.attendees?.find(a => a.email === userContact.email)
       : undefined
 
-    if (userAttendeeInEvent) {
+    if (userAttendeeInEvent !== undefined) {
       this._form.classList.remove('open-calendar__event-edit--without-invite');
       (inputs.namedItem('user-participation-status') as HTMLSelectElement).value =
         userAttendeeInEvent.partstat
