@@ -4,6 +4,7 @@ import { createCalendarObject,
   fetchCalendarObjects,
   fetchCalendars,
   updateCalendarObject,
+  getEventObjectString,
 } from './helpers/dav-helper'
 import type { CalendarSource,
   ServerSource,
@@ -12,6 +13,7 @@ import type { CalendarSource,
   EventUid,
   CalendarEvent,
   DisplayedCalendarEvent,
+  CalendarResponse,
 } from './types'
 import { isRRuleSourceEvent, isSameEvent, offsetDate } from './helpers/ics-helper'
 
@@ -79,15 +81,13 @@ export class CalendarClient {
         // NOTE - CJ - 2025-07-03 - Since we look are just looking for the CalendarObject and not the event,
         // we just need to check the uid of any event, and not the recurrenceID
         if (event.uid !== uid.uid) continue
-        if (event.recurrenceId) {
-          for (const recurringObject of this._recurringObjects) {
-            for (const event of recurringObject.data.events ?? []) {
-              if (event.uid === uid.uid) return recurringObject
-            }
+        if (!event.recurrenceId) return calendarObject
+        for (const recurringObject of this._recurringObjects) {
+          for (const event of recurringObject.data.events ?? []) {
+            if (event.uid === uid.uid) return recurringObject
           }
-          return undefined
         }
-        return calendarObject
+        return undefined
       }
     }
     return undefined
@@ -97,7 +97,7 @@ export class CalendarClient {
     return this._calendars.find(c => c.url === url)
   }
 
-  public createEvent = async ({ calendarUrl, event }: CalendarEvent) => {
+  public createEvent = async ({ calendarUrl, event }: CalendarEvent): Promise<CalendarResponse> => {
     const calendar = this.getCalendarByUrl(calendarUrl)
     if (!calendar) return { response: new Response(null, { status: 404 }), ical: '' }
     const calendarObject: IcsCalendar = {
@@ -112,7 +112,7 @@ export class CalendarClient {
   }
 
   // FIXME - CJ - 2025/06/03 - changing an object of calendar is not supported;
-  public updateEvent = async ({ event }: CalendarEvent) => {
+  public updateEvent = async ({ event }: CalendarEvent): Promise<CalendarResponse> => {
     const calendarObject = this.getCalendarObject(event)
     if (!calendarObject) return { response: new Response(null, { status: 404 }), ical: '' }
     const calendar = this.getCalendarByUrl(calendarObject.calendarUrl)!
@@ -147,18 +147,27 @@ export class CalendarClient {
         return offsetDate(event.start, recurrenceOffset)
       })
     }
-    const response = await updateCalendarObject(calendar, calendarObject)
-    if (!response.response.ok) calendarObject.data.events = oldEvents
-    return response
+    const {response, ical } = await updateCalendarObject(calendar, calendarObject)
+    if (!response.ok) calendarObject.data.events = oldEvents
+    return {
+      response,
+      ical: event.recurrenceId
+        ? getEventObjectString({...calendarObject!.data, events: [event]})
+        : ical,
+    }
   }
 
-  public deleteEvent = async ({ event }: CalendarEvent) => {
+  public deleteEvent = async ({ event }: CalendarEvent): Promise<CalendarResponse> => {
     const calendarObject = this.getCalendarObject(event)
     if (!calendarObject) return { response: new Response(null, { status: 404 }), ical: '' }
     const calendar = this.getCalendarByUrl(calendarObject.calendarUrl)!
 
     // FIXME - CJ - 2025-07-03 - Doing a deep copy probably be a better idea and avoid further issues
     const oldEvents = calendarObject.data.events ? [...calendarObject.data.events] : undefined
+    // NOTE - CJ - 2025-07-18 - The ical we need when deleting an event is the one before deletion
+    const ical = event.recurrenceId
+      ? getEventObjectString({...calendarObject!.data, events: [event]})
+      : getEventObjectString(calendarObject!.data)
 
     // NOTE - CJ - 2025-07-03 - When removing a recurring event instance, add it to exceptionDates
     if (event.recurrenceId) {
@@ -178,9 +187,9 @@ export class CalendarClient {
     }
 
     const action = calendarObject.data.events!.length === 0 ? deleteCalendarObject : updateCalendarObject
-    const response = await action(calendar, calendarObject)
+    const { response } = await action(calendar, calendarObject)
 
-    if (!response.response.ok) calendarObject.data.events = oldEvents
-    return response
+    if (!response.ok) calendarObject.data.events = oldEvents
+    return { response, ical }
   }
 }
