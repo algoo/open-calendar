@@ -1,3 +1,7 @@
+.ec-event:focus {
+  background-color: red !important;
+}
+
 .ec-event {
   /* NOTE - CJ - 2025-07-03 - Overrides the min heigh of the event to be one line. !important is needed as this is set manually on the element */
   /* eslint-disable-next-line css/no-important */
@@ -31,34 +35,45 @@
 
 .open-calendar__event-body__attendees {
   display: flex;
-  flex-direction: row;
-  gap: 0px 5px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
 }
 
-.open-calendar__event-body__organizer {
-  font-weight: bold;
-  color: red;
-}
-
-.open-calendar__event-body__attendee--chair {
+.open-calendar__event-body__organizer,
+.open-calendar__event-body__attendee--chair,
+.open-calendar-event-body-attendee--req-participant {
   font-weight: bold;
 }
 
-.open-calendar__event-body__attendee--req-participant {
-  font-weight: bold;
+.open-calendar__event-body__attendee--accepted .event-body-attendee-color {
+  background-color: skyblue;
+  border-radius: 33%;
 }
 
-.open-calendar__event-body__attendee--non-participant {
-  font-style: italic;
+.event-body-organizer .open-calendar__event-body__attendee--color {
+  background-color: skyblue;
+  border-radius: 33%;
 }
 
-.open-calendar__event-body__attendee--accepted {
-  color: green;
-}
-
-.open-calendar__event-body__attendee--declined {
+.open-calendar__event-body__attendee--declined .event-body-attendee-color {
   color: gray;
+
+  .event-body-attendee-needs-action .event-body-attendee-color {
+    background-color: orange;
+    border-radius: 33%;
+  }
+
+  .event-body-attendee-non-participant {
+    font-style: italic;
+  }
+}
+
+.event-body-organizer,
+.event-body-attendee {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 /* NOTE - CJ - 2025-07-04 - If the partstat of the attendee is NEED-ACTION of an unknown value, set if orange */

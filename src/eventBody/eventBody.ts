@@ -1,17 +1,18 @@
 import { escapeHtml, parseHtml } from '../helpers/dom-helper'
 import type { EventBodyInfo, IcsAttendeeRoleType } from '../types'
 import Autolinker from 'autolinker'
-import { icon, library } from '@fortawesome/fontawesome-svg-core'
-import { faRepeat, faBell } from '@fortawesome/free-solid-svg-icons'
+// import { icon as faIcon, library } from '@fortawesome/fontawesome-svg-core'
 import './eventBody.css'
 import { isEventAllDay } from '../helpers/ics-helper'
 import type { IcsAttendeePartStatusType } from 'ts-ics'
 import { getTranslations } from '../translations'
 
-library.add(faRepeat, faBell)
+
+// library.add(faRepeat, faBell, faUserGraduate, faUser, faUserSlash, faCheck, faQuestion, faCross)
 
 const html = /*html*/`
 <div class="open-calendar__event-body">
+  <i class="fa fa-regular fa-bell"></i>
   <div class="open-calendar__event-body__header">
     <div class="open-calendar__event-body__time">
       <b>{{time}}</b>
@@ -27,22 +28,28 @@ const html = /*html*/`
   {{/location}}
   <div class="open-calendar__event-body__attendees">
     {{#organizer}}
-    <span
-        title="{{name}} <{{email}}>\n{{t.organizer}}"
-        class="open-calendar__event-body__organizer">
-      {{name}}
-    </span>
+    <div
+      title="{{name}} <{{email}}>\n{{t.organizer}}"
+      class="open-calendar__event-body__organizer"
+    >
+      {{&partIcon}}
+      {{&roleIcon}}
+      <span>{{name}}</span>
+    </div>
     {{/organizer}}
     {{#attendees}}
-    <span
-        title="{{name}} <{{email}}>\n{{tRole}}\n{{tPartstat}}"
-        class="
+    <div
+      title="{{name}} <{{email}}>\n{{tRole}}\n{{tPartstat}}"
+      class="
           open-calendar__event-body__attendee open-calendar__event-body__attendee--{{role}}
           open-calendar__event-body__attendee--{{partstat}}
         "
+    
     >
-      {{name}}
-    </span>
+      {{&partIcon}}
+      {{&roleIcon}}
+      <span>{{name}}</span>
+    </div>
     {{/attendees}}
   </div>
 </div>`
@@ -50,27 +57,45 @@ const html = /*html*/`
 export class EventBody {
 
   public getBody = ({ event }: EventBodyInfo) => {
+    // const faOptions = { classes: 'open-calendar__icon'}
+    // const faOptionsWithColor = { classes: 'open-calendar__icon event-body-attendee-color'}
     const time = event.start.date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
     return Array.from(parseHtml(html, {
       time: isEventAllDay(event) ? undefined : time,
       summary: event.summary,
-      icons: [
-        event.recurrenceId ? icon({ prefix: 'fas', iconName: 'repeat' }).html.join('') : undefined,
-        event.alarms ? icon({ prefix: 'fas', iconName: 'bell'}, {}).html.join('') : undefined,
-      ],
+      // icons: [
+      //   event.recurrenceId ? faIcon({ prefix: 'fas', iconName: 'repeat' }).html.join('') : undefined,
+      //   event.alarms ? faIcon({ prefix: 'fas', iconName: 'bell' }, {}).html.join('') : undefined,
+      // ],
       location: event.location ? Autolinker.link(escapeHtml(event.location)) : undefined,
       organizer: event.organizer ? {
+        // roleIcon: faIcon({ prefix: 'fas', iconName: 'user-graduate' }, faOptions).html.join(),
+        // partIcon: faIcon({ prefix: 'fas', iconName: 'check' }, faOptionsWithColor).html.join(),
         name: event.organizer.name ?? event.organizer.email,
         email: event.organizer.email,
       } : undefined,
-      attendees: event.attendees ? event.attendees.map(a => ({
-        name: a.name ?? a.email,
-        email: a.email,
-        role: ((a.role as IcsAttendeeRoleType) ?? 'NON-PARTICIPANT').toLowerCase(),
-        tRole: getTranslations().attendeeRoles[(a.role as IcsAttendeeRoleType) ?? 'NON-PARTICIPANT'],
-        tPartstat: getTranslations().participationStatus[(a.partstat as IcsAttendeePartStatusType) ?? 'NEEDS-ACTION'],
-        partstat: ((a.partstat as IcsAttendeePartStatusType) ?? 'NEEDS-ACTION').toLowerCase(),
-      })) : undefined,
+
+      attendees: event.attendees ? event.attendees.map(a => {
+        const role = (a.role as IcsAttendeeRoleType) ?? 'NON-PARTICIPANT'
+        // const roleIcon = role == 'CHAIR' ? faIcon({ prefix: 'fas', iconName: 'user-graduate' }, faOptions)
+        //   : role == 'REQ-PARTICIPANT' ? faIcon({ prefix: 'fas', iconName: 'user' }, faOptions)
+        //     : role == 'OPT-PARTICIPANT' ? faIcon({ prefix: 'far', iconName: 'user' }, faOptions)
+        //       : faIcon({ prefix: 'fas', iconName: 'user-slash' }, faOptions)
+        // const partIcon = a.partstat == 'ACCEPTED' ? faIcon({ prefix: 'fas', iconName: 'check' }, faOptionsWithColor)
+        //   : a.partstat == 'NEEDS-ACTION' ? faIcon({ prefix: 'fas', iconName: 'question' }, faOptionsWithColor)
+        //     : faIcon({ prefix: 'fas', iconName: 'cross' }, faOptionsWithColor)
+
+        return {
+          name: a.name ?? a.email,
+          email: a.email,
+          role: role.toLowerCase(),
+          tRole: getTranslations().attendeeRoles[(a.role as IcsAttendeeRoleType) ?? 'NON-PARTICIPANT'],
+          tPartstat: getTranslations().participationStatus[(a.partstat as IcsAttendeePartStatusType) ?? 'NEEDS-ACTION'],
+          partstat: ((a.partstat as IcsAttendeePartStatusType) ?? 'NEEDS-ACTION').toLowerCase(),
+          // roleIcon: roleIcon.html.join(),
+          // partIcon: partIcon.html.join(),
+        }
+      }) : undefined,
       t: getTranslations().eventBody,
     }))
   }

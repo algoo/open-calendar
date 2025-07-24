@@ -28,14 +28,14 @@ import type { CalendarOptions,
 import { isEventAllDay, offsetDate } from '../helpers/ics-helper'
 import './calendarElement.css'
 import { CalendarSelectDropdown } from '../calendarselectdropdown/calendarSelectDropdown'
-import { icon, library } from '@fortawesome/fontawesome-svg-core'
-import { faRefresh } from '@fortawesome/free-solid-svg-icons'
+// import { icon, library } from '@fortawesome/fontawesome-svg-core'
+// import { faRefresh } from '@fortawesome/free-solid-svg-icons'
 import { CalendarClient } from '../calendarClient'
 import { getTranslations } from '../translations'
 import { EventBody } from '../eventBody/eventBody'
 import { TIME_MINUTE, TIME_DAY } from '../constants'
 
-library.add(faRefresh)
+// library.add(faRefresh)
 
 // HACK - CJ - 2025-07-03 - When an event is the whole day, the date returned by caldav is in UTC (20250627)
 // but since we display the local date, it's interpreted in our timezone (20250627T000200)
@@ -130,7 +130,7 @@ export class CalendarElement {
         view: options?.view ?? 'timeGridWeek',
         customButtons: {
           refresh: {
-            text: { domNodes: Array.from(icon({ prefix: 'fas', iconName: 'refresh' }).node) },
+            text: { html: '<i class="fa-solid fa-refresh" />'},
             click: this.refreshEvents,
           },
           calendars: {
@@ -328,18 +328,18 @@ export class CalendarElement {
     if (!response.ok) info.revert()
   }
 
-  private onEventClicked = ({ event, jsEvent}: EventCalendar.EventClickInfo) => {
-    const uid = event.extendedProps as EventUid
-    const calendarEvent = this._client.getCalendarEvent(uid)
-    if (!calendarEvent) return
-    this._eventEditHandlers!.onUpdateEvent({
-      jsEvent,
-      userContact: this._userContact,
-      calendars: this._client.getCalendars(),
-      ...calendarEvent,
-      handleUpdate: this.handleUpdateEvent,
-      handleDelete: this.handleDeleteEvent,
-    })
+  private onEventClicked = ({ event, jsEvent }: EventCalendar.EventClickInfo) => {
+    // const uid = event.extendedProps as EventUid
+    // const calendarEvent = this._client.getCalendarEvent(uid)
+    // if (!calendarEvent) return
+    // this._eventEditHandlers!.onUpdateEvent({
+    //   jsEvent,
+    //   userContact: this._userContact,
+    //   calendars: this._client.getCalendars(),
+    //   ...calendarEvent,
+    //   handleUpdate: this.handleUpdateEvent,
+    //   handleDelete: this.handleDeleteEvent,
+    // })
   }
 
   private refreshEvents = () => {

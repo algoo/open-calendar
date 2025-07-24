@@ -1,7 +1,8 @@
 import { CalendarElement } from './calendarelement/calendarElement'
 import type { CalendarOptions, CalendarSource, RecursivePartial, ServerSource } from './types'
 import './index.css'
-import { setTranslations, type ResourceBundle} from './translations'
+import { setTranslations, type ResourceBundle } from './translations'
+import '@fortawesome/fontawesome-free'
 
 export async function createCalendar(
   sources: (ServerSource | CalendarSource)[],

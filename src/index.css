@@ -48,3 +48,7 @@
 .ec {
   height: 100%;
 }
+
+.open-calendar__icon {
+  aspect-ratio: 1;
+}
