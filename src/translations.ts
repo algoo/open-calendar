@@ -37,6 +37,8 @@ const en = {
     'rrule': 'Frequency',
     'name': 'name',
     'userInvite': 'You were invited to this event',
+    'addAlarm': 'Add an alarm',
+    'alarms': 'Reminders',
   },
   'eventBody': {
     'organizer': 'Organizer',
@@ -75,6 +77,19 @@ const en = {
     'FREQ=MONTHLY': 'Monthly',
     'FREQ=YEARLY': 'Yearly',
   },
+  'triggers': {
+    'unchanged': 'Keep current',
+    'PT0S': 'When the event starts',
+    '-PT5M': '5 minutes before',
+    '-PT15M': '15 minutes before',
+    '-PT30M': '30 minutes before',
+    '-PT1H': '1 hour before',
+    '-PT2H': '2 hours before',
+    '-PT12H': '12 hours before',
+    '-P1D': '1 day before',
+    '-P2D': '2 days before',
+    '-P1W': '1 week before',
+  },
 }
 
 export type ResourceBundle = typeof en
@@ -109,6 +124,10 @@ export const setTranslations = (bundle: RecursivePartial<ResourceBundle>) => tra
   attendeeRoles: {
     ...en.attendeeRoles,
     ...bundle.attendeeRoles,
+  },
+  triggers: {
+    ...en.triggers,
+    ...bundle.triggers,
   },
   rrules: {
     ...en.rrules,

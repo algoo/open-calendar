@@ -1,5 +1,6 @@
 import type { IcsCalendar, IcsEvent, IcsRecurrenceId } from 'ts-ics'
 import type { DAVCalendar } from 'tsdav'
+import type { alarmActionTypes } from './constants'
 
 export type DomEvent = GlobalEventHandlersEventMap[keyof GlobalEventHandlersEventMap]
 
@@ -60,6 +61,8 @@ export const availableViews = [
   'listYear',
 ] as const
 export type View = typeof availableViews[number]
+
+export type IcsAlarmActionTypes = typeof alarmActionTypes
 
 export type ServerSource = {
   serverUrl: string

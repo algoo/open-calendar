@@ -5,3 +5,18 @@ export const TIME_HOUR = 60 * TIME_MINUTE
 export const TIME_DAY = 24 * TIME_HOUR
 
 export const attendeeUserParticipationStatusTypes = ['NEEDS-ACTION', 'ACCEPTED', 'DECLINED', 'TENTATIVE'] as const
+
+export const alarmActionTypes = ['DISPLAY'] as const
+
+export const namedTriggers = [
+  'PT0S',
+  '-PT5M',
+  '-PT15M',
+  '-PT30M',
+  '-PT1H',
+  '-PT2H',
+  '-PT12H',
+  '-P1D',
+  '-P2D',
+  '-P1W',
+] as const

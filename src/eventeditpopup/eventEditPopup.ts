@@ -1,6 +1,9 @@
 import { attendeePartStatusTypes,
   convertIcsRecurrenceRule,
+  convertIcsTrigger,
+  generateIcsDuration,
   getEventEndFromDuration,
+  type IcsAlarm,
   type IcsAttendee,
   type IcsAttendeePartStatusType,
   type IcsDateObject,
@@ -23,7 +26,7 @@ import { getRRuleString, isEventAllDay, offsetDate } from '../helpers/ics-helper
 import { tzlib_get_ical_block, tzlib_get_offset, tzlib_get_timezones } from 'timezones-ical-library'
 import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
-import { attendeeUserParticipationStatusTypes, TIME_MINUTE } from '../constants'
+import { attendeeUserParticipationStatusTypes, namedTriggers, TIME_MINUTE } from '../constants'
 
 const html = /*html*/`
 <form name="event" class="open-calendar__event-edit open-calendar__form">
@@ -76,6 +79,11 @@ const html = /*html*/`
       {{/rrules}}
       <option class="open-calendar__event-edit__rrule__unchanged" value="">{{trrules.unchanged}}</option>
     </select>
+    <label for="open-calendar__event-edit__alarms">{{t.alarms}}</label>
+    <div id="open-calendar__event-edit__alarms" class="open-calendar__event-edit__alarms" >
+      <div class="open-calendar__form__list"> </div>
+      <button type="button">{{t.addAlarm}}</button>
+    </div>
     <label for="open-calendar__event-edit__description">{{t.description}}</label>
     <textarea id="open-calendar__event-edit__description" name="description"> </textarea>
   </div>
@@ -117,6 +125,17 @@ const attendeeHtml = /*html*/`
   <button type="button" name="remove">X</button>
 </div>`
 
+const alarmHtml = /*html*/`
+<div class="event-edit-alarm" >
+  <select name="trigger" required> <!-- Needs to be set manually -->
+    <option value="" selected disabled hidden>{{t.triggers.unchanged}}</option>
+    {{#triggers}}
+      <option value="{{value}}">{{label}}</option>
+    {{/triggers}}
+  </select>
+  <button type="button" name="remove">X</button>
+</div>`
+
 export class EventEditPopup {
 
   private _recurringPopup: RecurringEventPopup
@@ -124,6 +143,7 @@ export class EventEditPopup {
   private _form: HTMLFormElement
   private _calendar: HTMLSelectElement
   private _attendees: HTMLDivElement
+  private _alarms: HTMLDivElement
   private _rruleUnchanged: HTMLOptionElement
 
   private _event?: IcsEvent
@@ -157,12 +177,21 @@ export class EventEditPopup {
     const allday = this._form.querySelector<HTMLButtonElement>('.open-calendar__event-edit [name="allday"]')!
     const addAttendee = this._form.querySelector<HTMLDivElement>('.open-calendar__event-edit__attendees > button')!
     this._rruleUnchanged = this._form.querySelector<HTMLOptionElement>('.open-calendar__event-edit__rrule__unchanged')!
+    this._alarms = this._form.querySelector<HTMLDivElement>(
+      '.open-calendar__event-edit__alarms > .open-calendar__form__list',
+    )!
+    const addAlarm = this._form.querySelector<HTMLDivElement>('.open-calendar__event-edit__alarms > button')!
     const cancel = this._form.querySelector<HTMLButtonElement>('.open-calendar__form__buttons [name="cancel"]')!
     const remove = this._form.querySelector<HTMLButtonElement>('.open-calendar__form__buttons [name="delete"]')!
 
     this._form.addEventListener('submit', async (e) => { e.preventDefault(); await this.save() })
     allday.addEventListener('click', this.updateAllday)
     addAttendee.addEventListener('click', () => this.addAttendee({ email: '' }))
+    addAlarm.addEventListener('click', () => this.addAlarm({
+      action: 'DISPLAY',
+      description: 'Alarm',
+      trigger: convertIcsTrigger(undefined, { value: namedTriggers[0] }),
+    }))
     cancel.addEventListener('click', this.cancel)
     remove.addEventListener('click', this.delete)
   }
@@ -205,6 +234,30 @@ export class EventEditPopup {
     remove.addEventListener('click', () => element.remove())
     role.value = attendee.role || 'REQ-PARTICIPANT'
     participationStatus.value = attendee.partstat || 'NEEDS-ACTION'
+  }
+
+
+  // TODO "non standard" alarms
+  private addAlarm = (alarm: IcsAlarm) => {
+    console.log(alarm)
+    const element = parseHtml<HTMLDivElement>(alarmHtml, {
+      triggers: namedTriggers.map(trigger => ({ value: trigger, label: getTranslations().triggers[trigger] })),
+      t: getTranslations().eventForm,
+    })[0]
+    this._alarms.appendChild(element)
+
+    const remove = element.querySelector<HTMLButtonElement>('button')!
+    const trigger = element.querySelector<HTMLSelectElement>('select[name="trigger"]')!
+    remove.addEventListener('click', () => element.remove())
+
+    if (alarm.action === 'DISPLAY' && alarm.trigger.type === 'relative') {
+      const value = generateIcsDuration(alarm.trigger.value!)?.trim() ?? ''
+      console.log(value, namedTriggers)
+      console.log(value in namedTriggers)
+      if (namedTriggers.find(s => s === value)) trigger.value = value
+    }
+    console.log(trigger.value)
+    trigger.disabled = trigger.value == ''
   }
 
   public onCreate = ({calendars, event, handleCreate, userContact}: EventEditCreateInfo) => {
@@ -303,6 +356,9 @@ export class EventEditPopup {
 
     this._attendees.innerHTML = ''
     for (const attendee of event.attendees ?? []) this.addAttendee(attendee)
+
+    this._alarms.innerHTML = ''
+    for (const alarm of event.alarms ?? []) this.addAlarm(alarm)
 
     this._popup.setVisible(true)
   }
