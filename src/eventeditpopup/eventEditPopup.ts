@@ -15,7 +15,8 @@ import { attendeeRoleTypes,
   type EventEditCallback,
   type EventEditCreateInfo,
   type EventEditDeleteInfo,
-  type EventEditUpdateInfo,
+  type EventEditMoveResizeInfo,
+  type EventEditSelectInfo,
 } from '../types'
 import { Popup } from '../popup/popup'
 import { parseHtml } from '../helpers/dom-helper'
@@ -213,7 +214,7 @@ export class EventEditPopup {
     this._handleDelete = null
     this.open('', event, calendars, userContact)
   }
-  public onUpdate = ({
+  public onSelect = ({
     calendarUrl,
     calendars,
     event,
@@ -221,7 +222,7 @@ export class EventEditPopup {
     handleDelete,
     handleUpdate,
     userContact,
-  }: EventEditUpdateInfo) => {
+  }: EventEditSelectInfo) => {
     this._form.classList.toggle('open-calendar__event-edit--create', false)
     this._handleSave = handleUpdate
     this._handleDelete = handleDelete
@@ -230,7 +231,18 @@ export class EventEditPopup {
       calendarUrl, editAll ? recurringEvent : event, calendars, userContact,
     ))
   }
-  public onDelete = ({calendarUrl, event, handleDelete}: EventEditDeleteInfo) => {
+  public onMoveResize = ({ calendarUrl, event, start, end, handleUpdate }: EventEditMoveResizeInfo) => {
+    const newEvent = { ...event }
+    const startDelta = start.getTime() - event.start.date.getTime()
+    newEvent.start = offsetDate(newEvent.start, startDelta)
+    if (event.end) {
+      const endDelta = end.getTime() - event.end.date.getTime()
+      newEvent.end = offsetDate(event.end, endDelta)
+    }
+    handleUpdate({ calendarUrl, event: newEvent })
+  }
+
+  public onDelete = ({ calendarUrl, event, handleDelete }: EventEditDeleteInfo) => {
     handleDelete({calendarUrl, event})
   }
 
