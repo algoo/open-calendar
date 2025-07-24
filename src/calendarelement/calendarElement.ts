@@ -13,7 +13,7 @@ import { CalendarClient } from '../calendarClient'
 import { getTranslations } from '../translations'
 import { EventBody } from '../eventBody/eventBody'
 import { TIME_MINUTE, TIME_DAY } from '../constants'
-import type { AddressBookSource, BodyHandlers, CalendarOptions, CalendarSource, DefaultComponentsOptions, DomEvent, EventBodyInfo, EventChangeHandlers, EventEditHandlers, SelectCalendarHandlers, SelectedCalendar, ServerSource, View } from '../types/options'
+import type { AddressBookSource, BodyHandlers, CalendarOptions, CalendarSource, VCardProvider, DefaultComponentsOptions, DomEvent, EventBodyInfo, EventChangeHandlers, EventEditHandlers, SelectCalendarHandlers, SelectedCalendar, ServerSource, View } from '../types/options'
 import type { CalendarEvent, EventUid } from '../types/calendar'
 
 library.add(faRefresh)
@@ -54,7 +54,7 @@ export class CalendarElement {
 
   public create = async (
     calendarSources: (ServerSource | CalendarSource)[],
-    addressBookSources: (ServerSource | AddressBookSource)[],
+    addressBookSources: (ServerSource | AddressBookSource | VCardProvider)[],
     target: Element,
     options?: CalendarOptions,
   ) => {

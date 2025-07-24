@@ -1,6 +1,6 @@
 import ICAL from 'ical.js'
 
-export class VCard {
+export class VCardComponent {
 
   public component: ICAL.Component
 

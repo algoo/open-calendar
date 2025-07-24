@@ -1,6 +1,6 @@
 import type { IcsEvent } from 'ts-ics'
 import type { Calendar, CalendarEvent } from './calendar'
-import type { AddressBookVCard } from './addressbook'
+import type { AddressBookVCard, VCard } from './addressbook'
 import type { attendeeRoleTypes, availableViews } from '../contants'
 
 export type RecursivePartial<T> = {
@@ -27,6 +27,10 @@ export type AddressBookSource = {
   addressBookUid?: unknown
   headers?: Record<string, string>
   fetchOptions?: RequestInit
+}
+
+export type VCardProvider = {
+  fetchContacts: () => Promise<VCard[]>
 }
 
 export type View = typeof availableViews[number]

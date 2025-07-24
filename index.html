@@ -18,7 +18,18 @@
     const password = window.prompt('password')
     createCalendar(
       [{ serverUrl: 'http://localhost:5232', headers: getBasicAuthHeaders({ username, password }) }],
-      [{ serverUrl: 'http://localhost:5232', headers: getBasicAuthHeaders({ username, password }) }],
+      [
+        { serverUrl: 'http://localhost:5232', headers: getBasicAuthHeaders({ username, password }) },
+        {
+          fetchContacts: () => Promise.resolve([{
+            name: 'zoro',
+            email: 'z@z.z',
+          }, {
+            name: 'ant',
+            email: 'ant@a.nt',
+          }])
+        }
+      ],
       document.getElementById('open-calendar'),
       // { hideVCardEmails: true }
     )

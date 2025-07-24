@@ -1,11 +1,11 @@
 import { CalendarElement } from './calendarelement/calendarElement'
 import './index.css'
 import { setTranslations, type ResourceBundle} from './translations'
-import type { AddressBookSource, CalendarOptions, CalendarSource, RecursivePartial, ServerSource } from './types/options'
+import type { AddressBookSource, CalendarOptions, CalendarSource, VCardProvider, RecursivePartial, ServerSource } from './types/options'
 
 export async function createCalendar(
   calendarSources: (ServerSource | CalendarSource)[],
-  addressBookSources: (ServerSource | AddressBookSource)[],
+  addressBookSources: (ServerSource | AddressBookSource | VCardProvider)[],
   target: Element,
   options?: CalendarOptions,
   translations?: RecursivePartial<ResourceBundle>,

@@ -7,11 +7,10 @@ import { tzlib_get_ical_block, tzlib_get_offset, tzlib_get_timezones } from 'tim
 import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
 import { TIME_MINUTE } from '../constants'
-import type { AddressBookVCard, Contact } from '../types/addressbook'
+import type { AddressBookVCard, Contact, VCard } from '../types/addressbook'
 import type { DefaultComponentsOptions, DomEvent, EventEditCallback, EventEditCreateInfo, EventEditDeleteInfo, EventEditUpdateInfo } from '../types/options'
 import type { Calendar } from '../types/calendar'
 import { attendeeRoleTypes, namedRRules } from '../contants'
-import type { VCard } from '../VCard'
 
 const html = /*html*/`
 <form name="event" class="open-calendar__event-edit open-calendar__form">

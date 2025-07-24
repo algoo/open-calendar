@@ -1,11 +1,11 @@
 import { type IcsCalendar, type IcsEvent } from 'ts-ics'
 import { createCalendarObject, deleteCalendarObject, fetchAddressBooks, fetchCalendarObjects, fetchCalendars, fetchAddressBookObjects, updateCalendarObject } from './helpers/dav-helper'
 import { isRRuleSourceEvent, isSameEvent, offsetDate } from './helpers/ics-helper'
-import type { CalendarSource, ServerSource, AddressBookSource } from './types/options'
+import type { CalendarSource, ServerSource, AddressBookSource, VCardProvider } from './types/options'
 import type { Calendar, CalendarEvent, CalendarObject, DisplayedCalendarEvent, EventUid } from './types/calendar'
-import type { AddressBook, AddressBookVCard, AddressBookObject } from './types/addressbook'
-import { VCard } from './VCard'
-import { isServerSource } from './helpers/types-helper'
+import type { AddressBook, AddressBookVCard, AddressBookObject, VCard } from './types/addressbook'
+import { VCardComponent } from './VCardComponent'
+import { isServerSource, isVCardProvider } from './helpers/types-helper'
 
 export class CalendarClient {
 
@@ -21,6 +21,8 @@ export class CalendarClient {
 
   private _addressBooks: AddressBook[] = []
   private _addressBookObjects: AddressBookObject[] = []
+  private _vCardProviders: VCardProvider[] = []
+  private _providedVCards: VCard[] = []
 
   public loadCalendars = async (sources: (ServerSource | CalendarSource)[]) => {
     const calendarsPerSource = await Promise.all(sources.map(async source => {
@@ -195,8 +197,11 @@ export class CalendarClient {
     return response
   }
 
-  public loadAddressBooks = async (sources: (ServerSource | AddressBookSource)[]) => {
-    const addressBooksPerSources = await Promise.all(sources.map(async source => {
+  public loadAddressBooks = async (sources: (ServerSource | AddressBookSource | VCardProvider)[]) => {
+    this._vCardProviders = sources.filter(s => isVCardProvider(s))
+    const davSources = sources.filter(s => !isVCardProvider(s)) as (ServerSource | AddressBookSource)[]
+
+    const addressBooksPerSources = await Promise.all(davSources.map(async source => {
       try {
         return await fetchAddressBooks(source)
       } catch (error) {
@@ -220,15 +225,23 @@ export class CalendarClient {
       }),
     )
     this._addressBookObjects = vCards.flat()
+    this._providedVCards = (await Promise.all(this._vCardProviders.flatMap(p => p.fetchContacts()))).flat()
+    console.log(this._providedVCards)
     return this.getAddressBookVCards()
   }
 
   public getAddressBookVCards = (): AddressBookVCard[] => {
-    return this.getAddressBookVCardsFromObjects(this._addressBookObjects)
+    return [
+      ...this.getAddressBookVCardsFromObjects(this._addressBookObjects),
+      ...this.getAddressBookVCardsFromProvidedContacts(this._providedVCards),
+    ]
   }
 
   private getAddressBookVCardsFromObjects = (addressBookObjects: AddressBookObject[]): AddressBookVCard[] => {
     // NOTE - CJ - 2025-07-16 - radicale does not accepts vcf files with more than one vcard component
-    return addressBookObjects.map(ao => ({ vCard: new VCard(ao.data), addressBookUrl: ao.addressBookUrl }))
+    return addressBookObjects.map(ao => ({ vCard: new VCardComponent(ao.data), addressBookUrl: ao.addressBookUrl }))
+  }
+  private getAddressBookVCardsFromProvidedContacts = (vCards: VCard[]): AddressBookVCard[] => {
+    return vCards.map(c => ({addressBookUrl: undefined, vCard: c}))
   }
 }

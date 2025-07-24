@@ -1,6 +1,5 @@
 import type { DAVAddressBook } from 'tsdav'
 import ICAL from 'ical.js'
-import type { VCard } from '../VCard'
 
 export type AddressBook = DAVAddressBook & {
   headers?: Record<string, string>
@@ -14,8 +13,14 @@ export type AddressBookObject = {
   addressBookUrl: string
 }
 
+export type VCard = {
+  name: string
+  email: string | null
+}
+
 export type AddressBookVCard = {
-  addressBookUrl: string
+  // INFO - 2025-07-24 - addressBookUrl is undefined when the contact is from a VCardProvider
+  addressBookUrl?: string
   vCard: VCard
 }
 
