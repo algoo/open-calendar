@@ -34,6 +34,7 @@ const en = {
     'save': 'Save',
     'chooseACalendar': '-- Choose a calendar --',
     'rrule': 'Frequency',
+    'userInvite': 'You were invited to this event',
   },
   'eventBody': {
     'organizer': 'Organizer',
@@ -43,12 +44,18 @@ const en = {
     'editAll': 'Edit all occurrences',
     'editSingle': 'Edit this occurrence only',
   },
-  'partStatus': {
+  'participationStatus': {
     'NEEDS-ACTION': 'Needs to answer',
     'ACCEPTED': 'Accepted',
     'DECLINED': 'Declined',
     'TENTATIVE': 'Tentatively accepted',
     'DELEGATED': 'Delegated',
+  },
+  'userParticipationStatus': {
+    'NEEDS-ACTION': 'Not answered',
+    'ACCEPTED': 'Accept',
+    'DECLINED': 'Decline',
+    'TENTATIVE': 'Accept tentatively',
   },
   'attendeeRoles': {
     'CHAIR': 'Chair',
@@ -89,9 +96,13 @@ export const setTranslations = (bundle: RecursivePartial<ResourceBundle>) => tra
     ...en.recurringForm,
     ...bundle.recurringForm,
   },
-  partStatus: {
-    ...en.partStatus,
-    ...bundle.partStatus,
+  userParticipationStatus: {
+    ...en.userParticipationStatus,
+    ...bundle.userParticipationStatus,
+  },
+  participationStatus: {
+    ...en.participationStatus,
+    ...bundle.participationStatus,
   },
   attendeeRoles: {
     ...en.attendeeRoles,

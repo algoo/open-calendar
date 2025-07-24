@@ -1,4 +1,9 @@
-import type { CalendarOptions, SelectCalendarHandlers, EventEditHandlers, ServerSource, VCardProvider } from '../types/options'
+import type { CalendarOptions,
+  SelectCalendarHandlers,
+  EventEditHandlers,
+  ServerSource,
+  VCardProvider,
+} from '../types/options'
 
 export function isServerSource(source: ServerSource | unknown): source is ServerSource {
   return (source as ServerSource).serverUrl !== undefined

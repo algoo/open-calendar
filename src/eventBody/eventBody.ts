@@ -75,7 +75,7 @@ export class EventBody {
         name: a.name ?? a.email,
         role: ((a.role as IcsAttendeeRoleType) ?? 'NON-PARTICIPANT').toLowerCase(),
         tRole: getTranslations().attendeeRoles[(a.role as IcsAttendeeRoleType) ?? 'NON-PARTICIPANT'],
-        tPartstat: getTranslations().partStatus[(a.partstat as IcsAttendeePartStatusType) ?? 'NEEDS-ACTION'],
+        tPartstat: getTranslations().participationStatus[(a.partstat as IcsAttendeePartStatusType) ?? 'NEEDS-ACTION'],
         partstat: ((a.partstat as IcsAttendeePartStatusType) ?? 'NEEDS-ACTION').toLowerCase(),
       })) : undefined,
       t: getTranslations().eventBody,

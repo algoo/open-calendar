@@ -1,14 +1,34 @@
-import { convertIcsRecurrenceRule, getEventEndFromDuration, type IcsAttendee, type IcsDateObject, type IcsEvent, type IcsOrganizer } from 'ts-ics'
+import { attendeePartStatusTypes,
+  convertIcsRecurrenceRule,
+  getEventEndFromDuration,
+  type IcsAttendee,
+  type IcsAttendeePartStatusType,
+  type IcsDateObject,
+  type IcsEvent,
+  type IcsOrganizer,
+} from 'ts-ics'
 import './eventEditPopup.css'
 import { Popup } from '../popup/popup'
 import { parseHtml } from '../helpers/dom-helper'
-import { contactToMailbox, getRRuleString, isEventAllDay, isSameContact, mailboxToContact, offsetDate } from '../helpers/ics-helper'
+import { contactToMailbox,
+  getRRuleString,
+  isEventAllDay,
+  isSameContact,
+  mailboxToContact,
+  offsetDate,
+} from '../helpers/ics-helper'
 import { tzlib_get_ical_block, tzlib_get_offset, tzlib_get_timezones } from 'timezones-ical-library'
 import { getTranslations } from '../translations'
 import { RecurringEventPopup } from './recurringEventPopup'
-import { TIME_MINUTE } from '../constants'
+import { attendeeUserParticipationStatusTypes, TIME_MINUTE } from '../constants'
 import type { AddressBookVCard, Contact, VCard } from '../types/addressbook'
-import type { DefaultComponentsOptions, DomEvent, EventEditCallback, EventEditCreateInfo, EventEditDeleteInfo, EventEditUpdateInfo } from '../types/options'
+import type { DefaultComponentsOptions,
+  DomEvent,
+  EventEditCallback,
+  EventEditCreateInfo,
+  EventEditDeleteInfo,
+  EventEditUpdateInfo,
+} from '../types/options'
 import type { Calendar } from '../types/calendar'
 import { attendeeRoleTypes, namedRRules } from '../contants'
 
@@ -16,7 +36,7 @@ const html = /*html*/`
 <form name="event" class="open-calendar__event-edit open-calendar__form">
   <datalist id="open-calendar__event-edit__mailboxes">
   </datalist>
-  <div class="open-calendar__form__content">
+  <div class="open-calendar__form__content open-calendar__event-edit__event">
     <label for="open-calendar__event-edit__calendar">{{t.calendar}}</label>
     <select id="open-calendar__event-edit__calendar" name="calendar" required="">
 
@@ -67,6 +87,14 @@ const html = /*html*/`
     <label for="open-calendar__event-edit__description">{{t.description}}</label>
     <textarea id="open-calendar__event-edit__description" name="description"> </textarea>
   </div>
+  <div class="open-calendar__form__content open-calendar__event-edit__invite">
+    <label for="open-calendar__event-edit__user-participation-status">{{t.userInvite}}</label>
+    <select id="open-calendar__event-edit__user-participation-status" name="user-participation-status">
+      {{#userParticipationStatuses}}
+        <option value="{{key}}">{{translation}}</option>
+      {{/userParticipationStatuses}}
+    </select>
+  </div>
   <div class="open-calendar__form__buttons">
     <button name="delete" type="button">{{t.delete}}</button>
     <button name="cancel" type="button">{{t.cancel}}</button>
@@ -93,6 +121,11 @@ const attendeeHtml = /*html*/`
       <option value="{{key}}">{{translation}}</option>
     {{/roles}}
   </select>
+  <select name="participation-status" value="{{participationStatus}}" required disabled>
+    {{#participationStatuses}}
+      <option value="{{key}}">{{translation}}</option>
+    {{/participationStatuses}}
+  </select>
   <button type="button" name="remove">X</button>
 </div>`
 
@@ -111,6 +144,7 @@ export class EventEditPopup {
   private _eventContacts: Contact[] = []
 
   private _event?: IcsEvent
+  private _userContact?: Contact
   private _calendarUrl?: string
   private _handleSave: EventEditCallback | null = null
   private _handleDelete: EventEditCallback | null = null
@@ -126,7 +160,11 @@ export class EventEditPopup {
       t: getTranslations().eventForm,
       trrules: getTranslations().rrules,
       timezones: timezones,
-      rrules: namedRRules.map(rule => ({ rule, label: getTranslations().rrules[rule]})),
+      rrules: namedRRules.map(rule => ({ rule, label: getTranslations().rrules[rule] })),
+      userParticipationStatuses: attendeeUserParticipationStatusTypes.map(stat => ({
+        key: stat,
+        translation: getTranslations().userParticipationStatus[stat],
+      })),
     })[0]
     this._popup.content.appendChild(this._form)
 
@@ -191,22 +229,29 @@ export class EventEditPopup {
       mailbox: this.getValueFromAttendee(attendee),
       role: attendee.role || 'REQ-PARTICIPANT',
       roles: attendeeRoleTypes.map(role => ({ key: role, translation: getTranslations().attendeeRoles[role] })),
+      participationStatus: attendee.partstat || 'NEEDS-ACTION',
+      participationStatuses: attendeePartStatusTypes.map(status => ({
+        key: status,
+        translation: getTranslations().participationStatus[status],
+      })),
       t: getTranslations().eventForm,
     })[0]
     this._attendees.appendChild(element)
 
     const remove = element.querySelector<HTMLButtonElement>('button')!
     const role = element.querySelector<HTMLSelectElement>('select[name="attendee-role"]')!
+    const participationStatus = element.querySelector<HTMLSelectElement>('select[name="participation-status"]')!
 
     remove.addEventListener('click', () => element.remove())
     role.value = attendee.role || 'REQ-PARTICIPANT'
+    participationStatus.value = attendee.partstat || 'NEEDS-ACTION'
   }
 
-  public onCreate = ({calendars, vCards, event, handleCreate}: EventEditCreateInfo) => {
+  public onCreate = ({calendars, vCards, event, handleCreate, userContact}: EventEditCreateInfo) => {
     this._form.classList.toggle('open-calendar__event-edit--create', true)
     this._handleSave = handleCreate
     this._handleDelete = null
-    this.open('', event, calendars, vCards)
+    this.open('', event, calendars, vCards, userContact)
   }
   public onUpdate = ({
     calendarUrl,
@@ -216,20 +261,29 @@ export class EventEditPopup {
     recurringEvent,
     handleDelete,
     handleUpdate,
+    userContact,
   }: EventEditUpdateInfo) => {
     this._form.classList.toggle('open-calendar__event-edit--create', false)
     this._handleSave = handleUpdate
     this._handleDelete = handleDelete
-    if (!recurringEvent) this.open(calendarUrl, event, calendars, vCards)
+    if (!recurringEvent) this.open(calendarUrl, event, calendars, vCards, userContact)
     else this._recurringPopup.open(editAll => {
-      return this.open(calendarUrl, editAll ? recurringEvent : event, calendars, vCards)
+      return this.open(
+        calendarUrl, editAll ? recurringEvent : event, calendars, vCards, userContact)
     })
   }
   public onDelete = ({calendarUrl, event, handleDelete}: EventEditDeleteInfo) => {
     handleDelete({calendarUrl, event})
   }
 
-  public open = (calendarUrl: string, event: IcsEvent, calendars: Calendar[], vCards: AddressBookVCard[]) => {
+  public open = (
+    calendarUrl: string,
+    event: IcsEvent,
+    calendars: Calendar[],
+    vCards: AddressBookVCard[],
+    userContact?: Contact,
+  ) => {
+    this._userContact = userContact
     this.setContacts(
       vCards.filter(c => c.vCard.email !== null).map(c => c.vCard),
       [...event.attendees ?? [], event.organizer].filter(a => a !== undefined),
@@ -286,6 +340,20 @@ export class EventEditPopup {
     (inputs.namedItem('rrule') as HTMLInputElement).value = rrule;
     (inputs.namedItem('rrule') as HTMLInputElement).disabled = event.recurrenceId !== undefined
 
+    const userAttendeeInEvent = userContact !== undefined
+      ? event.attendees?.find(a => a.email === userContact.email)
+      : undefined
+
+    if (userAttendeeInEvent !== undefined) {
+      this._form.classList.remove('open-calendar__event-edit--without-invite');
+      (inputs.namedItem('user-participation-status') as HTMLSelectElement).value =
+        userAttendeeInEvent.partstat
+        ?? attendeeUserParticipationStatusTypes[0]
+    } else {
+      this._form.classList.add('open-calendar__event-edit--without-invite')
+    }
+
+
     this._attendees.innerHTML = ''
     for (const attendee of event.attendees ?? []) this.addAttendee(attendee)
 
@@ -314,6 +382,7 @@ export class EventEditPopup {
 
     const mailboxes = data.getAll('attendee-mailbox') as string[]
     const roles = data.getAll('attendee-role') as string[]
+    const participationStatuses = data.getAll('participation-status') as string[]
     const rrule = data.get('rrule') as string
     const description = data.get('description') as string
 
@@ -331,10 +400,17 @@ export class EventEditPopup {
           ...this.getContactFromValue(data.get('organizer-mailbox') as string),
         }
         : undefined,
-      attendees: mailboxes.map((mailbox, i) => ({
-        ...this.getContactFromValue(mailbox),
-        role: roles[i],
-      })) || undefined,
+      attendees: mailboxes.map((mailbox, i) => {
+        const contact = this.getContactFromValue(mailbox)
+        return ({
+          ...contact,
+          role: roles[i],
+          partstat: (contact.email === this._userContact?.email
+            ? data.get('user-participation-status')
+            : participationStatuses[i]
+          ) as IcsAttendeePartStatusType,
+        })
+      }) || undefined,
       recurrenceRule: rrule ? convertIcsRecurrenceRule(undefined, {value: rrule}) : undefined,
 
       // NOTE - CJ - 2025-07-03 - explicitly set `duration` to undefined as we set `end`

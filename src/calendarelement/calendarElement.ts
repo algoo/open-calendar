@@ -1,4 +1,10 @@
-import { createCalendar as createEventCalendar, DayGrid, TimeGrid, List, Interaction, destroyCalendar as destroyEventCalendar } from '@event-calendar/core'
+import { createCalendar as createEventCalendar,
+  DayGrid,
+  TimeGrid,
+  List,
+  Interaction,
+  destroyCalendar as destroyEventCalendar,
+} from '@event-calendar/core'
 import type { Calendar as EventCalendar } from '@event-calendar/core'
 import '@event-calendar/core/index.css'
 import { getEventEnd, type IcsEvent } from 'ts-ics'
@@ -13,8 +19,23 @@ import { CalendarClient } from '../calendarClient'
 import { getTranslations } from '../translations'
 import { EventBody } from '../eventBody/eventBody'
 import { TIME_MINUTE, TIME_DAY } from '../constants'
-import type { AddressBookSource, BodyHandlers, CalendarOptions, CalendarSource, VCardProvider, DefaultComponentsOptions, DomEvent, EventBodyInfo, EventChangeHandlers, EventEditHandlers, SelectCalendarHandlers, SelectedCalendar, ServerSource, View } from '../types/options'
+import type { AddressBookSource,
+  BodyHandlers,
+  CalendarOptions,
+  CalendarSource,
+  VCardProvider,
+  DefaultComponentsOptions,
+  DomEvent,
+  EventBodyInfo,
+  EventChangeHandlers,
+  EventEditHandlers,
+  SelectCalendarHandlers,
+  SelectedCalendar,
+  ServerSource,
+  View,
+} from '../types/options'
 import type { CalendarEvent, EventUid } from '../types/calendar'
+import type { Contact } from '../types/addressbook'
 
 library.add(faRefresh)
 
@@ -46,6 +67,7 @@ export class CalendarElement {
   private _eventEditHandlers?: EventEditHandlers
   private _eventChangeHandlers?: EventChangeHandlers
   private _bodyHandlers?: BodyHandlers
+  private _userContact?: Contact
 
   public constructor() {
     this._client = new CalendarClient()
@@ -90,6 +112,8 @@ export class CalendarElement {
     this._bodyHandlers = {
       getEventBody: options?.getEventBody ?? this.createDefaultEventBody(options ?? {}),
     }
+
+    this._userContact = options?.userContact
   }
 
   public destroy = () => {
@@ -290,6 +314,7 @@ export class CalendarElement {
     }
     this._eventEditHandlers!.onCreateEvent({
       jsEvent,
+      userContact: this._userContact,
       calendars: this._client.getCalendars(),
       event: newEvent,
       vCards: this._client.getAddressBookVCards(),
@@ -322,6 +347,7 @@ export class CalendarElement {
     if (!calendarEvent) return
     this._eventEditHandlers!.onUpdateEvent({
       jsEvent,
+      userContact: this._userContact,
       calendars: this._client.getCalendars(),
       vCards: this._client.getAddressBookVCards(),
       ...calendarEvent,
