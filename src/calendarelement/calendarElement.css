@@ -1,0 +1,7 @@
+.open-calendar__overlay {
+  overflow: auto;
+  position: fixed;
+  width: max-content;
+  z-index : 9999;
+  box-shadow : 0 2px 8px rgba(0,0,0,0.2);
+}

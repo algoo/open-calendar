@@ -7,7 +7,7 @@ import { createCalendar as createEventCalendar,
 } from '@event-calendar/core'
 import type { Calendar as EventCalendar } from '@event-calendar/core'
 import '@event-calendar/core/index.css'
-import { getEventEnd, type IcsEvent } from 'ts-ics'
+import { getEventEnd, type IcsEvent, type IcsAttendee, type IcsAttendeePartStatusType } from 'ts-ics'
 import { EventEditPopup } from '../eventeditpopup/eventEditPopup'
 import { hasCalendarHandlers, hasEventHandlers } from '../helpers/types-helper'
 import { isEventAllDay, offsetDate } from '../helpers/ics-helper'
@@ -261,14 +261,53 @@ export class CalendarElement {
     // NOTE - CJ - 2025-11-07 - calendarEvent can be undefined when creating events
     if (calendarEvent === undefined) return {html: ''}
     const calendar = this._client.getCalendarByUrl(calendarEvent.calendarUrl)!
-    return {
-      domNodes: this._bodyHandlers!.getEventBody({
-        event: calendarEvent.event,
-        vCards: this._client.getAddressBookVCards(),
-        calendar,
-        view: view.type as View,
-      }),
-    }
+    const nodes = this._bodyHandlers!.getEventBody({
+      event: calendarEvent.event,
+      vCards: this._client.getAddressBookVCards(),
+      calendar,
+      view: view.type as View,
+      userContact: this._userContact,
+    })
+    nodes.forEach(n => {
+      if (!(n instanceof HTMLElement)) return
+      n.addEventListener('participation-icon-click', async (e: Event) => {
+        const custom = e as CustomEvent
+        const email: string | undefined = custom.detail?.email
+        if (!email || email !== this._userContact?.email) return
+        const ev = this._client.getCalendarEvent(event.extendedProps as EventUid)
+        if (!ev) return
+        const oldEvent = ev.event
+        const newEvent: IcsEvent = {
+          ...oldEvent,
+          attendees: oldEvent.attendees
+            ? oldEvent.attendees.map(a => {
+              if (a.email !== email) return a
+              const current = (a.partstat ?? 'NEEDS-ACTION') as IcsAttendeePartStatusType
+              const next: IcsAttendeePartStatusType =
+                current === 'NEEDS-ACTION' ? 'ACCEPTED'
+                  : current === 'ACCEPTED' ? 'DECLINED'
+                    : 'NEEDS-ACTION'
+              return { ...a, partstat: next } as IcsAttendee
+            })
+            : oldEvent.attendees,
+        }
+        await this.handleUpdateEvent({ calendarUrl: ev.calendarUrl, event: newEvent })
+      })
+      n.addEventListener('event-edit', (jsEvent: Event) => {
+        const ev = this._client.getCalendarEvent(event.extendedProps as EventUid)
+        if (!ev) return
+        this._eventEditHandlers!.onUpdateEvent({
+          jsEvent,
+          userContact: this._userContact,
+          calendars: this._client.getCalendars(),
+          vCards: this._client.getAddressBookVCards(),
+          ...ev,
+          handleUpdate: this.handleUpdateEvent,
+          handleDelete: this.handleDeleteEvent,
+        })
+      })
+    })
+    return { domNodes: nodes }
   }
 
   private onClickNewEvent = (jsEvent: MouseEvent) => this.createEvent(jsEvent)
@@ -342,6 +381,86 @@ export class CalendarElement {
   }
 
   private onEventClicked = ({ event, jsEvent}: EventCalendar.EventClickInfo) => {
+    const mouse = jsEvent as MouseEvent
+    const targetEl = jsEvent.target as HTMLElement
+    // Ignore clicks on status icon (handled separately)
+    if (targetEl?.closest('.open-calendar__event-body__status-clickable')) return
+    const container = targetEl?.closest('.ec-event') as HTMLElement | null
+    const bodyEl = container?.querySelector('.open-calendar__event-body') as HTMLElement | null
+    const isSmall = !!container?.querySelector('.open-calendar__event-body--small')
+    // For small events: first click shows overlay, click inside overlay opens edit
+    if (isSmall) {
+      const rect = container!.getBoundingClientRect()
+      const overlay = document.createElement('div')
+      overlay.className = 'open-calendar__overlay'
+      overlay.style.left = `${rect.left}px`
+      overlay.style.top = `${rect.top}px`
+      overlay.style.minWidth = `${rect.width}px`
+      const cs = getComputedStyle(container!)
+      overlay.style.borderRadius = cs.borderRadius
+      overlay.style.backgroundColor = cs.backgroundColor
+      overlay.style.color = cs.color
+      overlay.style.padding = cs.padding
+      // Clone body for full content
+      const clone = bodyEl!.cloneNode(true) as HTMLElement
+      clone.classList.remove('open-calendar__event-body--small')
+      clone.classList.add('open-calendar__event-body--expanded')
+      overlay.appendChild(clone)
+      document.body.appendChild(overlay)
+      // Reposition if overflowing viewport
+      const orect = overlay.getBoundingClientRect()
+      const newLeft = Math.max(8, Math.min(rect.left, window.innerWidth - orect.width - 8))
+      const newTop = Math.max(8, Math.min(rect.top, window.innerHeight - orect.height - 8))
+      overlay.style.left = `${newLeft}px`
+      overlay.style.top = `${newTop}px`
+      const onDocPointer = (ev: Event) => {
+        const target = ev.target as Node
+        if (!overlay.contains(target)) {
+          removeOverlay()
+        }
+      }
+      const removeOverlay = () => {
+        document.removeEventListener('click', onDocPointer, true)
+        document.removeEventListener('touchstart', onDocPointer, true)
+        overlay.remove()
+      }
+      document.addEventListener('click', onDocPointer, true)
+      document.addEventListener('touchstart', onDocPointer, true)
+      overlay.addEventListener('mouseleave', removeOverlay)
+      // Clicking inside overlay opens edit
+      overlay.addEventListener('click', () => {
+        removeOverlay()
+        const uid = event.extendedProps as EventUid
+        const calendarEvent = this._client.getCalendarEvent(uid)
+        if (!calendarEvent) return
+        this._eventEditHandlers!.onUpdateEvent({
+          jsEvent,
+          userContact: this._userContact,
+          calendars: this._client.getCalendars(),
+          vCards: this._client.getAddressBookVCards(),
+          ...calendarEvent,
+          handleUpdate: this.handleUpdateEvent,
+          handleDelete: this.handleDeleteEvent,
+        })
+      })
+      return
+    }
+    // For non-small: open edit on single click
+    if (mouse && mouse.detail >= 1) {
+      const uid = event.extendedProps as EventUid
+      const calendarEvent = this._client.getCalendarEvent(uid)
+      if (!calendarEvent) return
+      this._eventEditHandlers!.onUpdateEvent({
+        jsEvent,
+        userContact: this._userContact,
+        calendars: this._client.getCalendars(),
+        vCards: this._client.getAddressBookVCards(),
+        ...calendarEvent,
+        handleUpdate: this.handleUpdateEvent,
+        handleDelete: this.handleDeleteEvent,
+      })
+      return
+    }
     const uid = event.extendedProps as EventUid
     const calendarEvent = this._client.getCalendarEvent(uid)
     if (!calendarEvent) return
