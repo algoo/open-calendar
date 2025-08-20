@@ -105,13 +105,16 @@
   text-decoration: line-through;
 }
 
-.open-calendar__event-body__attendee-status-icon[title*="En attente"] {
+.open-calendar__event-body__attendee-status-icon__pending {
   color: orange;
 }
-.open-calendar__event-body__attendee-status-icon[title*="confirmée"] {
+.open-calendar__event-body__attendee-status-icon__tentative {
+  color: orange;
+}
+.open-calendar__event-body__attendee-status-icon__confirmed {
   color: blue;
 }
-.open-calendar__event-body__attendee-status-icon[title*="refusée"] {
+.open-calendar__event-body__attendee-status-icon__declined {
   color: gray;
 }
 

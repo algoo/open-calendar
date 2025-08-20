@@ -39,6 +39,8 @@ import type { Contact } from '../types/addressbook'
 
 library.add(faRefresh)
 
+const THIRTY_MINUTE =  30 * 60 * 1000
+
 // HACK - CJ - 2025-07-03 - When an event is the whole day, the date returned by caldav is in UTC (20250627)
 // but since we display the local date, it's interpreted in our timezone (20250627T000200)
 // and for all day events, EC round up to the nearest day (20250628)
@@ -261,15 +263,25 @@ export class CalendarElement {
     // NOTE - CJ - 2025-11-07 - calendarEvent can be undefined when creating events
     if (calendarEvent === undefined) return {html: ''}
     const calendar = this._client.getCalendarByUrl(calendarEvent.calendarUrl)!
-    const nodes = this._bodyHandlers!.getEventBody({
+    const events = this._bodyHandlers!.getEventBody({
       event: calendarEvent.event,
       vCards: this._client.getAddressBookVCards(),
       calendar,
       view: view.type as View,
       userContact: this._userContact,
     })
-    nodes.forEach(n => {
+    events.forEach(n => {
       if (!(n instanceof HTMLElement)) return
+      const ev = calendarEvent.event
+      const isShort = Boolean(
+        ev.start && ev.end && ev.start.date && ev.end.date &&
+        (ev.end.date.getTime() - ev.start.date.getTime()) <= THIRTY_MINUTE)
+      if (isShort) n.classList.add('open-calendar__event-body--small')
+      const ro = new ResizeObserver(() => {
+        if (n.scrollHeight > n.clientHeight) n.classList.add('open-calendar__event-body--small')
+        else if (!isShort) n.classList.remove('open-calendar__event-body--small')
+      })
+      ro.observe(n)
       n.addEventListener('participation-icon-click', async (e: Event) => {
         const custom = e as CustomEvent
         const email: string | undefined = custom.detail?.email
@@ -307,7 +319,7 @@ export class CalendarElement {
         })
       })
     })
-    return { domNodes: nodes }
+    return { domNodes: events }
   }
 
   private onClickNewEvent = (jsEvent: MouseEvent) => this.createEvent(jsEvent)
@@ -420,8 +432,8 @@ export class CalendarElement {
         }
       }
       const removeOverlay = () => {
-        document.removeEventListener('click', onDocPointer, true)
-        document.removeEventListener('touchstart', onDocPointer, true)
+        document.removeEventListener('click', onDocPointer)
+        document.removeEventListener('touchstart', onDocPointer)
         overlay.remove()
       }
       document.addEventListener('click', onDocPointer, true)
