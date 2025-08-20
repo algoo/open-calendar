@@ -31,7 +31,7 @@ const html = /*html*/`
     <div class="open-calendar__event-body__icons">
       {{#icons}}{{&.}}{{/icons}}
     </div>
-    {{summary}}
+    <b>{{summary}}</b>
   </div>
   {{#location}}
   <!-- NOTE - CJ - 2025-07-07 - location is escaped in the js as we wan to display a link -->
