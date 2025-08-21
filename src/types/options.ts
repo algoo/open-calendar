@@ -59,6 +59,7 @@ export type EventBodyInfo = {
   vCards: AddressBookVCard[]
   event: IcsEvent
   view: View
+  userContact?: Contact
 }
 export type BodyHandlers = {
   getEventBody: (info: EventBodyInfo) => Node[]

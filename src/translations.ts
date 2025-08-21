@@ -38,6 +38,13 @@ const en = {
   },
   'eventBody': {
     'organizer': 'Organizer',
+    'participation_require': 'Required participant',
+    'participation_optional': 'Optional participant',
+    'non_participant': 'Non participant',
+    'participation_confirmed': 'Participation confirmed',
+    'participation_pending': 'Participation pending',
+    'participation_confirmed_tentative': 'Participation confirmed tentative',
+    'participation_declined': 'Participation declined',
   },
   'recurringForm': {
     'editRecurring': 'This is a recurring event',
