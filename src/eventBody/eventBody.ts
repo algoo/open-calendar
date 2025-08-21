@@ -136,24 +136,25 @@ export class EventBody {
   public mapAttendee = (a: IcsAttendee, vCards: AddressBookVCard[], userEmail?: string) => {
     const role = ((a.role as IcsAttendeeRoleType) ?? 'NON-PARTICIPANT').toUpperCase()
     const partstat = ((a.partstat as IcsAttendeePartStatusType) ?? 'NEEDS-ACTION').toUpperCase()
+    const t = getTranslations().eventBody
     let roleIcon = ''
     let roleTitle = ''
     let roleClass = ''
     if (role === 'CHAIR') {
       roleIcon = addFaFw(icon({ prefix: 'fas', iconName: 'user-graduate' }).html.join(''))
-      roleTitle = '{{t.organizer}}'
+      roleTitle = t.organizer
       roleClass = 'organizer'
     } else if (role === 'REQ-PARTICIPANT') {
       roleIcon = addFaFw(icon({ prefix: 'fas', iconName: 'user' }).html.join(''))
-      roleTitle = '{{t.participation_require}}'
+      roleTitle = t.participation_require
       roleClass = 'required'
     } else if (role === 'OPT-PARTICIPANT') {
       roleIcon = addFaFw(icon({ prefix: 'far', iconName: 'user' }).html.join(''))
-      roleTitle = '{{t.participation_optional}}'
+      roleTitle = t.participation_optional
       roleClass = 'optional'
     } else if (role === 'NON-PARTICIPANT') {
       roleIcon = addFaFw(icon({ prefix: 'fas', iconName: 'user-slash' }).html.join(''))
-      roleTitle = '{{t.non_participant}}'
+      roleTitle = t.non_participant
       roleClass = 'non-participant'
     }
     // Status icon, color, and title
@@ -165,19 +166,19 @@ export class EventBody {
     if (partstat === 'NEEDS-ACTION') {
       statusIcon = addFaFw(icon({ prefix: 'fas', iconName: 'circle-question' }).html.join(''))
       statusClass = 'pending'
-      statusTitle = '{{t.participation_pending}}'
+      statusTitle = t.participation_pending
     } else if (partstat === 'ACCEPTED') {
       statusIcon = addFaFw(icon({ prefix: 'fas', iconName: 'square-check' }).html.join(''))
       statusClass = 'confirmed'
-      statusTitle = '{{t.participation_confirmed}}'
+      statusTitle = t.participation_confirmed
     } else if (partstat === 'TENTATIVE') {
       statusIcon = addFaFw(icon({ prefix: 'fas', iconName: 'square-check' }).html.join(''))
       statusClass = 'tentative'
-      statusTitle = '{{t.participation_confirmed_tentative}}'
+      statusTitle = t.participation_confirmed_tentative
     } else if (partstat === 'DECLINED') {
       statusIcon = addFaFw(icon({ prefix: 'fas', iconName: 'xmark' }).html.join(''))
       statusClass = 'declined'
-      statusTitle = '{{t.participation_declined}}'
+      statusTitle = t.participation_declined
       declinedClass = 'declined'
     }
     return {
