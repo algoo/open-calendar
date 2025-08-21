@@ -1,7 +1,7 @@
 import { escapeHtml, parseHtml } from '../helpers/dom-helper'
 import Autolinker from 'autolinker'
 import { icon, library } from '@fortawesome/fontawesome-svg-core'
-import { faRepeat, faBell, faChalkboardUser, faUserGraduate, faUser, faUserSlash, faCircleQuestion, faSquareCheck, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faRepeat, faBell, faChalkboardUser, faUserGraduate, faUser, faUserSlash, faCircleQuestion, faSquareCheck, faXmark, faLocationDot } from '@fortawesome/free-solid-svg-icons'
 import { far } from '@fortawesome/free-regular-svg-icons'
 import './eventBody.css'
 import { contactToMailbox, isEventAllDay, isSameContact } from '../helpers/ics-helper'
@@ -21,6 +21,7 @@ library.add(
   faSquareCheck,
   faXmark,
   far,
+  faLocationDot,
 )
 
 const addFaFw = (html: string) => html.replace('class="', 'class="fa-fw ')
@@ -88,7 +89,12 @@ export class EventBody {
         event.recurrenceId ? addFaFw(icon({ prefix: 'fas', iconName: 'repeat' }).html.join('')) : undefined,
         event.alarms ? addFaFw(icon({ prefix: 'fas', iconName: 'bell' }).html.join('')) : undefined,
       ],
-      location: event.location ? Autolinker.link(escapeHtml(event.location)) : undefined,
+      location: event.location
+        ? [
+            addFaFw(icon({ prefix: 'fas', iconName: 'location-dot' }).html.join('')),
+            Autolinker.link(escapeHtml(event.location))
+          ].join(' ')
+        : undefined,
       description: event.description || undefined,
       attendees: attendees.map(att => ({
         ...att,
