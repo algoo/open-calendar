@@ -53,7 +53,9 @@ const html = /*html*/`
     {{/organizer}}
     {{#attendees}}
     <div class="open-calendar__event-body__attendee-line {{declinedClass}}">
-      <span class="open-calendar__event-body__attendee-status-icon__{{statusClass}}" title="{{statusTitle}}">{{&statusIcon}}</span>
+      <span class="open-calendar__event-body__attendee-status-icon__{{statusClass}}" title="{{statusTitle}}">
+        {{&statusIcon}}
+      </span>
       <span class="open-calendar__event-body__attendee-role-icon" title="{{roleTitle}}">{{&roleIcon}}</span>
       <span class="open-calendar__event-body__attendee-name {{roleClass}}">{{name}}</span>
     </div>
@@ -91,9 +93,9 @@ export class EventBody {
       ],
       location: event.location
         ? [
-            addFaFw(icon({ prefix: 'fas', iconName: 'location-dot' }).html.join('')),
-            Autolinker.link(escapeHtml(event.location))
-          ].join(' ')
+          addFaFw(icon({ prefix: 'fas', iconName: 'location-dot' }).html.join('')),
+          Autolinker.link(escapeHtml(event.location)),
+        ].join(' ')
         : undefined,
       description: event.description || undefined,
       attendees: attendees.map(att => ({
