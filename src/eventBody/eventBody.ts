@@ -82,7 +82,7 @@ export class EventBody {
       organizerRoleIcon: addFaFw(icon({ prefix: 'fas', iconName: 'user-graduate' }).html.join('')),
     } : undefined
 
-    const nodes = Array.from(parseHtml(html, {
+    const events = Array.from(parseHtml(html, {
       time: isEventAllDay(event) ? undefined : time,
       summary: event.summary,
       icons: [
@@ -112,20 +112,20 @@ export class EventBody {
       t: getTranslations().eventBody,
     }))
     // Add click handler for current user status icon
-    nodes.forEach(node => {
-      if (!(node instanceof HTMLElement)) return
-      node.querySelectorAll('.open-calendar__event-body__status-clickable').forEach(el => {
+    events.forEach(event => {
+      if (!(event instanceof HTMLElement)) return
+      event.querySelectorAll('.open-calendar__event-body__status-clickable').forEach(el => {
         el.addEventListener('click', (e) => {
           e.stopPropagation()
           const email = (el as HTMLElement).getAttribute('data-email')
-          node.dispatchEvent(new CustomEvent('participation-icon-click', {
+          event.dispatchEvent(new CustomEvent('participation-icon-click', {
             bubbles: true,
             detail: { email },
           }))
         })
       })
     })
-    return nodes
+    return events
   }
 
   public getAttendeeValue(vCards: AddressBookVCard[], attendee: IcsAttendee | IcsOrganizer) {
