@@ -7,24 +7,9 @@ import { createCalendar as createEventCalendar,
 } from '@event-calendar/core'
 import type { Calendar as EventCalendar } from '@event-calendar/core'
 import '@event-calendar/core/index.css'
-import { getEventEnd, type IcsEvent } from 'ts-ics'
+import { getEventEnd, type IcsEvent, type IcsAttendee, type IcsAttendeePartStatusType } from 'ts-ics'
 import { EventEditPopup } from '../eventeditpopup/eventEditPopup'
 import { hasCalendarHandlers, hasEventHandlers } from '../helpers/types-helper'
-import type { CalendarOptions,
-  CalendarSource,
-  ServerSource,
-  EventUid,
-  EventEditHandlers,
-  CalendarEvent,
-  EventChangeHandlers,
-  SelectCalendarHandlers,
-  SelectedCalendar,
-  View,
-  BodyHandlers,
-  EventBodyInfo,
-  DomEvent,
-  Contact,
-} from '../types'
 import { isEventAllDay, offsetDate } from '../helpers/ics-helper'
 import './calendarElement.css'
 import { CalendarSelectDropdown } from '../calendarselectdropdown/calendarSelectDropdown'
@@ -34,8 +19,27 @@ import { CalendarClient } from '../calendarClient'
 import { getTranslations } from '../translations'
 import { EventBody } from '../eventBody/eventBody'
 import { TIME_MINUTE, TIME_DAY } from '../constants'
+import type { AddressBookSource,
+  BodyHandlers,
+  CalendarOptions,
+  CalendarSource,
+  VCardProvider,
+  DefaultComponentsOptions,
+  DomEvent,
+  EventBodyInfo,
+  EventChangeHandlers,
+  EventEditHandlers,
+  SelectCalendarHandlers,
+  SelectedCalendar,
+  ServerSource,
+  View,
+} from '../types/options'
+import type { CalendarEvent, EventUid } from '../types/calendar'
+import type { Contact } from '../types/addressbook'
 
 library.add(faRefresh)
+
+const THIRTY_MINUTE =  30 * 60 * 1000
 
 // HACK - CJ - 2025-07-03 - When an event is the whole day, the date returned by caldav is in UTC (20250627)
 // but since we display the local date, it's interpreted in our timezone (20250627T000200)
@@ -73,12 +77,16 @@ export class CalendarElement {
   }
 
   public create = async (
-    sources: (ServerSource | CalendarSource)[],
+    calendarSources: (ServerSource | CalendarSource)[],
+    addressBookSources: (ServerSource | AddressBookSource | VCardProvider)[],
     target: Element,
     options?: CalendarOptions,
   ) => {
     if (this._calendar) return
-    await this._client.loadCalendars(sources)
+    await Promise.all([
+      this._client.loadCalendars(calendarSources),
+      this._client.loadAddressBooks(addressBookSources),
+    ])
     this._selectedCalendars = new Set(this._client.getCalendars().map(c => c.url))
 
     this._eventEditHandlers = options && hasEventHandlers(options)
@@ -87,7 +95,7 @@ export class CalendarElement {
         onUpdateEvent: options.onUpdateEvent,
         onDeleteEvent: options.onDeleteEvent,
       }
-      : this.createDefaultEventEdit(target)
+      : this.createDefaultEventEdit(target, options ?? {})
 
     this._calendarSelectHandlers = options && hasCalendarHandlers(options)
       ? {
@@ -104,7 +112,7 @@ export class CalendarElement {
     this.createCalendar(target, options)
 
     this._bodyHandlers = {
-      getEventBody: options?.getEventBody ?? this.createDefaultEventBody(),
+      getEventBody: options?.getEventBody ?? this.createDefaultEventBody(options ?? {}),
     }
 
     this._userContact = options?.userContact
@@ -182,8 +190,8 @@ export class CalendarElement {
     this._target = null
   }
 
-  private createDefaultEventEdit = (target: Node): EventEditHandlers => {
-    this._eventEdit ??= new EventEditPopup(target)
+  private createDefaultEventEdit = (target: Node, options: DefaultComponentsOptions): EventEditHandlers => {
+    this._eventEdit ??= new EventEditPopup(target, options)
     return {
       onCreateEvent: this._eventEdit.onCreate,
       onUpdateEvent: this._eventEdit.onUpdate,
@@ -208,8 +216,8 @@ export class CalendarElement {
     this._calendarSelect = null
   }
 
-  private createDefaultEventBody = (): (info: EventBodyInfo) => Node[] => {
-    this._eventBody ??= new EventBody()
+  private createDefaultEventBody = (options: DefaultComponentsOptions): (info: EventBodyInfo) => Node[] => {
+    this._eventBody ??= new EventBody(options)
     return this._eventBody.getBody
   }
 
@@ -218,7 +226,10 @@ export class CalendarElement {
   }
 
   private fetchAndLoadEvents = async (info: EventCalendar.FetchInfo): Promise<EventCalendar.EventInput[]> => {
-    const calendarEvents = await this._client.fetchAndLoadEvents(info.startStr, info.endStr)
+    const [calendarEvents] = await Promise.all([
+      this._client.fetchAndLoadEvents(info.startStr, info.endStr),
+      this._client.fetchAndLoadVCards(),
+    ])
     return calendarEvents.map(({ event, calendarUrl }) => {
       const allDay = isEventAllDay(event)
       return {
@@ -248,15 +259,67 @@ export class CalendarElement {
   }
 
   private getEventContent = ({ event, view }: EventCalendar.EventContentInfo): EventCalendar.Content => {
-    const calendarEvent = this._client.getCalendarEvent(event.extendedProps as EventUid)!
+    const calendarEvent = this._client.getCalendarEvent(event.extendedProps as EventUid)
+    // NOTE - CJ - 2025-11-07 - calendarEvent can be undefined when creating events
+    if (calendarEvent === undefined) return {html: ''}
     const calendar = this._client.getCalendarByUrl(calendarEvent.calendarUrl)!
-    return {
-      domNodes: this._bodyHandlers!.getEventBody({
-        event: calendarEvent.event,
-        calendar,
-        view: view.type as View,
-      }),
-    }
+    const events = this._bodyHandlers!.getEventBody({
+      event: calendarEvent.event,
+      vCards: this._client.getAddressBookVCards(),
+      calendar,
+      view: view.type as View,
+      userContact: this._userContact,
+    })
+    events.forEach(n => {
+      if (!(n instanceof HTMLElement)) return
+      const ev = calendarEvent.event
+      const isShort = Boolean(
+        ev.start && ev.end && ev.start.date && ev.end.date &&
+        (ev.end.date.getTime() - ev.start.date.getTime()) <= THIRTY_MINUTE)
+      if (isShort) n.classList.add('open-calendar__event-body--small')
+      const ro = new ResizeObserver(() => {
+        if (n.scrollHeight > n.clientHeight) n.classList.add('open-calendar__event-body--small')
+        else if (!isShort) n.classList.remove('open-calendar__event-body--small')
+      })
+      ro.observe(n)
+      n.addEventListener('participation-icon-click', async (e: Event) => {
+        const custom = e as CustomEvent
+        const email: string | undefined = custom.detail?.email
+        if (!email || email !== this._userContact?.email) return
+        const ev = this._client.getCalendarEvent(event.extendedProps as EventUid)
+        if (!ev) return
+        const oldEvent = ev.event
+        const newEvent: IcsEvent = {
+          ...oldEvent,
+          attendees: oldEvent.attendees
+            ? oldEvent.attendees.map(a => {
+              if (a.email !== email) return a
+              const current = (a.partstat ?? 'NEEDS-ACTION') as IcsAttendeePartStatusType
+              const next: IcsAttendeePartStatusType =
+                current === 'NEEDS-ACTION' ? 'ACCEPTED'
+                  : current === 'ACCEPTED' ? 'DECLINED'
+                    : 'NEEDS-ACTION'
+              return { ...a, partstat: next } as IcsAttendee
+            })
+            : oldEvent.attendees,
+        }
+        await this.handleUpdateEvent({ calendarUrl: ev.calendarUrl, event: newEvent })
+      })
+      n.addEventListener('event-edit', (jsEvent: Event) => {
+        const ev = this._client.getCalendarEvent(event.extendedProps as EventUid)
+        if (!ev) return
+        this._eventEditHandlers!.onUpdateEvent({
+          jsEvent,
+          userContact: this._userContact,
+          calendars: this._client.getCalendars(),
+          vCards: this._client.getAddressBookVCards(),
+          ...ev,
+          handleUpdate: this.handleUpdateEvent,
+          handleDelete: this.handleDeleteEvent,
+        })
+      })
+    })
+    return { domNodes: events }
   }
 
   private onClickNewEvent = (jsEvent: MouseEvent) => this.createEvent(jsEvent)
@@ -305,6 +368,7 @@ export class CalendarElement {
       userContact: this._userContact,
       calendars: this._client.getCalendars(),
       event: newEvent,
+      vCards: this._client.getAddressBookVCards(),
       handleCreate: this.handleCreateEvent,
     })
   }
@@ -329,6 +393,86 @@ export class CalendarElement {
   }
 
   private onEventClicked = ({ event, jsEvent}: EventCalendar.EventClickInfo) => {
+    const mouse = jsEvent as MouseEvent
+    const targetEl = jsEvent.target as HTMLElement
+    // Ignore clicks on status icon (handled separately)
+    if (targetEl?.closest('.open-calendar__event-body__status-clickable')) return
+    const container = targetEl?.closest('.ec-event') as HTMLElement | null
+    const bodyEl = container?.querySelector('.open-calendar__event-body') as HTMLElement | null
+    const isSmall = !!container?.querySelector('.open-calendar__event-body--small')
+    // For small events: first click shows overlay, click inside overlay opens edit
+    if (isSmall) {
+      const rect = container!.getBoundingClientRect()
+      const overlay = document.createElement('div')
+      overlay.className = 'open-calendar__overlay'
+      overlay.style.left = `${rect.left}px`
+      overlay.style.top = `${rect.top}px`
+      overlay.style.minWidth = `${rect.width}px`
+      const cs = getComputedStyle(container!)
+      overlay.style.borderRadius = cs.borderRadius
+      overlay.style.backgroundColor = cs.backgroundColor
+      overlay.style.color = cs.color
+      overlay.style.padding = cs.padding
+      // Clone body for full content
+      const clone = bodyEl!.cloneNode(true) as HTMLElement
+      clone.classList.remove('open-calendar__event-body--small')
+      clone.classList.add('open-calendar__event-body--expanded')
+      overlay.appendChild(clone)
+      document.body.appendChild(overlay)
+      // Reposition if overflowing viewport
+      const orect = overlay.getBoundingClientRect()
+      const newLeft = Math.max(8, Math.min(rect.left, window.innerWidth - orect.width - 8))
+      const newTop = Math.max(8, Math.min(rect.top, window.innerHeight - orect.height - 8))
+      overlay.style.left = `${newLeft}px`
+      overlay.style.top = `${newTop}px`
+      const onDocPointer = (ev: Event) => {
+        const target = ev.target as Node
+        if (!overlay.contains(target)) {
+          removeOverlay()
+        }
+      }
+      const removeOverlay = () => {
+        document.removeEventListener('click', onDocPointer)
+        document.removeEventListener('touchstart', onDocPointer)
+        overlay.remove()
+      }
+      document.addEventListener('click', onDocPointer, true)
+      document.addEventListener('touchstart', onDocPointer, true)
+      overlay.addEventListener('mouseleave', removeOverlay)
+      // Clicking inside overlay opens edit
+      overlay.addEventListener('click', () => {
+        removeOverlay()
+        const uid = event.extendedProps as EventUid
+        const calendarEvent = this._client.getCalendarEvent(uid)
+        if (!calendarEvent) return
+        this._eventEditHandlers!.onUpdateEvent({
+          jsEvent,
+          userContact: this._userContact,
+          calendars: this._client.getCalendars(),
+          vCards: this._client.getAddressBookVCards(),
+          ...calendarEvent,
+          handleUpdate: this.handleUpdateEvent,
+          handleDelete: this.handleDeleteEvent,
+        })
+      })
+      return
+    }
+    // For non-small: open edit on single click
+    if (mouse && mouse.detail >= 1) {
+      const uid = event.extendedProps as EventUid
+      const calendarEvent = this._client.getCalendarEvent(uid)
+      if (!calendarEvent) return
+      this._eventEditHandlers!.onUpdateEvent({
+        jsEvent,
+        userContact: this._userContact,
+        calendars: this._client.getCalendars(),
+        vCards: this._client.getAddressBookVCards(),
+        ...calendarEvent,
+        handleUpdate: this.handleUpdateEvent,
+        handleDelete: this.handleDeleteEvent,
+      })
+      return
+    }
     const uid = event.extendedProps as EventUid
     const calendarEvent = this._client.getCalendarEvent(uid)
     if (!calendarEvent) return
@@ -336,6 +480,7 @@ export class CalendarElement {
       jsEvent,
       userContact: this._userContact,
       calendars: this._client.getCalendars(),
+      vCards: this._client.getAddressBookVCards(),
       ...calendarEvent,
       handleUpdate: this.handleUpdateEvent,
       handleDelete: this.handleDeleteEvent,

@@ -1,16 +1,23 @@
 import { CalendarElement } from './calendarelement/calendarElement'
-import type { CalendarOptions, CalendarSource, RecursivePartial, ServerSource } from './types'
 import './index.css'
 import { setTranslations, type ResourceBundle} from './translations'
+import type { AddressBookSource,
+  CalendarOptions,
+  CalendarSource,
+  VCardProvider,
+  RecursivePartial,
+  ServerSource,
+} from './types/options'
 
 export async function createCalendar(
-  sources: (ServerSource | CalendarSource)[],
+  calendarSources: (ServerSource | CalendarSource)[],
+  addressBookSources: (ServerSource | AddressBookSource | VCardProvider)[],
   target: Element,
   options?: CalendarOptions,
   translations?: RecursivePartial<ResourceBundle>,
 ) {
   if (translations) setTranslations(translations)
   const calendar = new CalendarElement()
-  await calendar.create(sources, target, options)
+  await calendar.create(calendarSources, addressBookSources, target, options)
   return calendar
 }

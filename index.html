@@ -10,8 +10,8 @@
 <body style="height: 100vh; margin:0; padding: 5px; box-sizing: border-box;">
   <div id="open-calendar"></div>
   <script type="module">
-    import { getBasicAuthHeaders } from "tsdav";
-    import { createCalendar } from "./src";
+    import { getBasicAuthHeaders } from 'tsdav';
+    import { createCalendar } from './src';
 
     const onEventCreated = ({ event, ical }) => {
       console.log(ical)
@@ -24,15 +24,28 @@
     }
 
     // TODO - CJ - 2025--03-07 - Add a proper login form and ask for the server path
-    const username = window.prompt("username")
-    const password = window.prompt("password")
+    const username = window.prompt('username')
+    const password = window.prompt('password')
     createCalendar(
       [{ serverUrl: 'http://localhost:5232', headers: getBasicAuthHeaders({ username, password }) }],
+      [
+        { serverUrl: 'http://localhost:5232', headers: getBasicAuthHeaders({ username, password }) },
+        {
+          fetchContacts: () => Promise.resolve([{
+            name: 'zoro',
+            email: 'z@z.z',
+          }, {
+            name: 'ant',
+            email: 'ant@a.nt',
+          }])
+        }
+      ],
       document.getElementById('open-calendar'),
       {
         onEventCreated,
         onEventUpdated,
         onEventDeleted,
+        // hideVCardEmails: true,
         userContact: {
           email: username
         },

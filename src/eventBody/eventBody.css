@@ -28,14 +28,6 @@
   height: 1.5em;
 }
 
-
-.open-calendar__event-body__attendees {
-  display: flex;
-  flex-direction: row;
-  gap: 0px 5px;
-  flex-wrap: wrap;
-}
-
 .open-calendar__event-body__organizer {
   font-weight: bold;
   color: red;
@@ -61,17 +53,91 @@
   color: gray;
 }
 
-/* NOTE - CJ - 2025-07-04 - If the partstat of the attendee is NEED-ACTION of an unknown value, set if orange */
-.open-calendar__event-body__attendees:not(.open-calendar__event-body__attendee--declined, .open-calendar__event-body__attendee--accepted) {
-  color: orange;
-}
-
 .ec-day-grid .open-calendar__event-body__header {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
 }
 
-.ec-day-grid :is(.open-calendar__event-body__location, .open-calendar__event-body__attendees) {
+.ec-day-grid :is(.open-calendar__event-body__location) {
   display: none;
+}
+
+.open-calendar__event-body__attendees {
+  font-size: 0.8em;
+  margin: 0.75em 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.open-calendar__event-body__attendee-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.open-calendar__event-body__attendee-status-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.open-calendar__event-body__attendee-role-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.open-calendar__event-body__attendee-name.organizer,
+.open-calendar__event-body__attendee-name.required {
+  font-weight: bold;
+}
+
+.open-calendar__event-body__attendee-name.optional {
+  font-weight: normal;
+}
+
+.open-calendar__event-body__attendee-name.non-participant {
+  font-style: italic;
+}
+
+.open-calendar__event-body__attendee-line.declined {
+  color: gray;
+  text-decoration: line-through;
+}
+
+.open-calendar__event-body__attendee-status-icon__pending {
+  color: orange;
+}
+.open-calendar__event-body__attendee-status-icon__tentative {
+  color: orange;
+}
+.open-calendar__event-body__attendee-status-icon__confirmed {
+  color: blue;
+}
+.open-calendar__event-body__attendee-status-icon__declined {
+  color: gray;
+}
+
+.open-calendar__event-body__status-clickable {
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.open-calendar__event-body__status-clickable:hover {
+  filter: brightness(1.2);
+}
+
+.open-calendar__event-body--expanded {
+  max-height: none;
+  max-width: none;
+  overflow: visible;
+  cursor: pointer;
+}
+
+.open-calendar__event-body--small {
+  cursor: zoom-in;
+}
+
+.open-calendar__event-body__description {
+  margin-top: 0.5em;
+  font-size: 0.9em;
 }

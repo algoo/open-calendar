@@ -1,4 +1,4 @@
-import type { RecursivePartial } from './types'
+import type { RecursivePartial } from './types/options'
 
 // HACK - CJ - 2025-07-03 - Ideally, this object would have been a json file and imported with:
 // `import en from 'locale/en/translation.json'`
@@ -33,13 +33,18 @@ const en = {
     'cancel': 'Cancel',
     'save': 'Save',
     'chooseACalendar': '-- Choose a calendar --',
-    'email': 'email',
     'rrule': 'Frequency',
-    'name': 'name',
     'userInvite': 'You were invited to this event',
   },
   'eventBody': {
     'organizer': 'Organizer',
+    'participation_require': 'Required participant',
+    'participation_optional': 'Optional participant',
+    'non_participant': 'Non participant',
+    'participation_confirmed': 'Participation confirmed',
+    'participation_pending': 'Participation pending',
+    'participation_confirmed_tentative': 'Participation confirmed tentative',
+    'participation_declined': 'Participation declined',
   },
   'recurringForm': {
     'editRecurring': 'This is a recurring event',
