@@ -7,7 +7,13 @@ import { createCalendar as createEventCalendar,
 } from '@event-calendar/core'
 import type { Calendar as EventCalendar } from '@event-calendar/core'
 import '@event-calendar/core/index.css'
-import { getEventEnd, type IcsEvent, type IcsAttendee, type IcsAttendeePartStatusType } from 'ts-ics'
+import {
+  getEventEnd,
+  type IcsEvent,
+  type IcsAttendee,
+  type IcsAttendeePartStatusType,
+  type IcsDateObject
+} from 'ts-ics'
 import { EventEditPopup } from '../eventeditpopup/eventEditPopup'
 import { hasCalendarHandlers, hasEventHandlers } from '../helpers/types-helper'
 import { isEventAllDay, offsetDate } from '../helpers/ics-helper'
@@ -226,10 +232,8 @@ export class CalendarElement {
   }
 
   private fetchAndLoadEvents = async (info: EventCalendar.FetchInfo): Promise<EventCalendar.EventInput[]> => {
-    const [calendarEvents] = await Promise.all([
-      this._client.fetchAndLoadEvents(info.startStr, info.endStr),
-      this._client.fetchAndLoadVCards(),
-    ])
+    const calendarEvents = await this._client.fetchAndLoadEvents(info.startStr, info.endStr)
+
     return calendarEvents.map(({ event, calendarUrl }) => {
       const allDay = isEventAllDay(event)
       return {
@@ -302,7 +306,7 @@ export class CalendarElement {
               return { ...a, partstat: next } as IcsAttendee
             })
             : oldEvent.attendees,
-        }
+        } as IcsEvent
         await this.handleUpdateEvent({ calendarUrl: ev.calendarUrl, event: newEvent })
       })
       n.addEventListener('event-edit', (jsEvent: Event) => {
@@ -351,7 +355,8 @@ export class CalendarElement {
     const start = event?.start ?? {
       date: new Date(),
       type: 'DATE-TIME',
-    }
+    } as IcsDateObject
+
     const newEvent = {
       summary: '',
       uid: '',
@@ -388,7 +393,9 @@ export class CalendarElement {
 
     // TODO - CJ - 2025-07-03 - Add an api 'onMoveResizeEvent'
     // for ex. to allow a popup to open to ask if you want to change a single/all events if it's a recurrent event
-    const response = await this.handleUpdateEvent({ calendarUrl: calendarEvent.calendarUrl, event: newEvent })
+    const response = await this.handleUpdateEvent(
+      { calendarUrl: calendarEvent.calendarUrl, event: newEvent } as CalendarEvent
+    )
     if (!response.ok) info.revert()
   }
 

@@ -20,6 +20,10 @@ import type { CalendarSource, ServerSource, CalendarResponse, AddressBookSource 
 import type { AddressBook, AddressBookObject } from '../types/addressbook'
 import ICAL from 'ical.js'
 
+export function getEventObjectString(event: IcsCalendar) {
+  return generateIcsCalendar(event)
+}
+
 // HACK - CJ - 2025-07-09 - resolve the issue in Radicale of ts-ics directly (https://github.com/algoo/open-calendar/issues/1)
 function fixAlldayRecurringDate(ics: string) {
   return ics.replace(/^(DTSTART|DTEND|RECURRENCE-ID):([0-9]{8})$/gm, '$1;VALUE=DATE:$2')
@@ -66,7 +70,7 @@ export async function fetchCalendarObjects(
       .filter(c => c.data.events?.find(e => e.recurrenceId))
       .map(c => c.url),
   )
-  const davDavRecurringObjects = recurringObjectsUrls.size == 0
+  const davRecurringObjects = recurringObjectsUrls.size == 0
     ? []
     : await davFetchCalendarObjects({
       calendar: calendar,
@@ -74,7 +78,7 @@ export async function fetchCalendarObjects(
       headers: calendar.headers,
       fetchOptions: calendar.fetchOptions,
     })
-  const recurringObjects = davDavRecurringObjects.map(o => ({
+  const recurringObjects = davRecurringObjects.map(o => ({
     url: o.url,
     etag: o.etag,
     data: convertIcsCalendar(undefined, o.data),
@@ -90,7 +94,7 @@ export async function createCalendarObject(
   validateTimezones(calendarObjectData)
   for (const event of calendarObjectData.events ?? []) event.uid = crypto.randomUUID()
   const uid = calendarObjectData.events?.[0].uid ?? crypto.randomUUID()
-  const iCalString = generateIcsCalendar(calendarObjectData)
+  const iCalString = getEventObjectString(calendarObjectData)
   const response = await davCreateCalendarObject({
     calendar,
     iCalString,
@@ -109,7 +113,7 @@ export async function updateCalendarObject(
   const davCalendarObject: DAVCalendarObject = {
     url: calendarObject.url,
     etag: calendarObject.etag,
-    data: generateIcsCalendar(calendarObject.data),
+    data: getEventObjectString(calendarObject.data),
   }
   const response = await davUpdateCalendarObject({
     calendarObject: davCalendarObject,
@@ -127,7 +131,7 @@ export async function deleteCalendarObject(
   const davCalendarObject: DAVCalendarObject = {
     url: calendarObject.url,
     etag: calendarObject.etag,
-    data: generateIcsCalendar(calendarObject.data),
+    data: getEventObjectString(calendarObject.data),
   }
   const response = await davDeleteCalendarObject({
     calendarObject: davCalendarObject,

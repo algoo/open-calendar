@@ -102,7 +102,6 @@ export type EventEditHandlers = {
 export type EventChangeInfo = {
   calendarUrl: string
   event: IcsEvent
-  // FIXME - CJ - 2025-07-30 - Do we keep this as this is for the entire CalendarOBject and not the event itself ?
   ical: string
 }
 
