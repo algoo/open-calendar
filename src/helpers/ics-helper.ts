@@ -1,5 +1,7 @@
 import { generateIcsRecurrenceRule, type IcsDateObject, type IcsEvent, type IcsRecurrenceRule } from 'ts-ics'
-import type { EventUid } from '../types'
+import { parseOneAddress } from 'email-addresses'
+import type { EventUid } from '../types/calendar'
+import type { Contact, VCard } from '../types/addressbook'
 
 export function isEventAllDay(event: IcsEvent) {
   return event.start.type === 'DATE' || event.end?.type === 'DATE'
@@ -28,4 +30,27 @@ export function isRRuleSourceEvent(eventInstance: EventUid, event: EventUid) {
 export function getRRuleString(recurrenceRule?: IcsRecurrenceRule) {
   if (!recurrenceRule) return ''
   return generateIcsRecurrenceRule(recurrenceRule).trim().slice(6)
+}
+
+// FIXME - CJ - 2025-07-11 - This function should only be used for display purposes
+// It does not handle escape characters properly (quotes, comments)
+// and parsing the result back to a contact with `mailboxToContact` may fail
+// See https://datatracker.ietf.org/doc/html/rfc5322#section-3.4 the specs
+export function contactToMailbox(contact: Contact | VCard): string {
+  return contact.name
+    ? `${contact.name} <${contact.email}>`
+    : contact.email!
+}
+
+export function mailboxToContact(mailbox: string): Contact {
+  const parsed = parseOneAddress(mailbox)
+  if (parsed?.type !== 'mailbox') throw new Error(`Failed to parse mailbox '${mailbox}' `)
+  return {
+    name: parsed.name ?? undefined,
+    email: parsed.address,
+  }
+}
+
+export function isSameContact(a: Contact | VCard, b: Contact | VCard) {
+  return a.name === b.name && a.email === b.email
 }

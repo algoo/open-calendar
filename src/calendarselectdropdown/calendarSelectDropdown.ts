@@ -1,6 +1,6 @@
 import { parseHtml } from '../helpers/dom-helper'
-import type { SelectCalendarsClickInfo } from '../types'
 import './calendarSelectDropdown.css'
+import type { SelectCalendarsClickInfo } from '../types/options'
 
 const html = /* html */`
 <div class="open-calendar__calendar-select__container open-calendar__form">
