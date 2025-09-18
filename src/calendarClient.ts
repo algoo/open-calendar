@@ -118,7 +118,14 @@ export class CalendarClient {
 
   public createEvent = async ({ calendarUrl, event }: CalendarEvent): Promise<CalendarResponse> => {
     const calendar = this.getCalendarByUrl(calendarUrl)
-    if (!calendar) return { response: new Response(null, { status: 404 }), ical: '' }
+
+    if (!calendar) {
+      return {
+        response: new Response(null, { status: 404 }),
+        ical: ''
+      } as CalendarResponse
+    }
+
     const calendarObject: IcsCalendar = {
       // INFO - CJ - 2025-07-03 - prodId is a FPI (https://en.wikipedia.org/wiki/Formal_Public_Identifier)
       // '+//IDN algoo.fr//NONSGML Open Calendar v0.9//EN' would also be possible
@@ -133,7 +140,13 @@ export class CalendarClient {
   // FIXME - CJ - 2025/06/03 - changing an object of calendar is not supported;
   public updateEvent = async ({ event }: CalendarEvent): Promise<CalendarResponse> => {
     const calendarObject = this.getCalendarObject(event)
-    if (!calendarObject) return { response: new Response(null, { status: 404 }), ical: '' }
+
+    if (!calendarObject) {
+      return {
+        response: new Response(null, { status: 404 }),
+        ical: ''
+      } as CalendarResponse
+    }
     const calendar = this.getCalendarByUrl(calendarObject.calendarUrl)!
 
     // FIXME - CJ - 2025-07-03 - Doing a deep copy probably be a better idea and avoid further issues
@@ -154,11 +167,13 @@ export class CalendarClient {
       // INFO - CJ - 2025-07-03 - `recurrenceId` of modified events needs to be synced with `start` of the root event
       calendarObject.data.events = calendarObject.data.events!.map(element => {
         if (element === event || !isRRuleSourceEvent(element, event)) return element
+
         const recurrenceOffset = element.recurrenceId!.value.date.getTime() - oldEvents[index].start.date.getTime()
+
         return {
           ...element,
           recurrenceId: { value: offsetDate(event.start, recurrenceOffset) },
-        }
+        } as IcsEvent
       })
       // INFO - CJ - 2025-07-03 - `exceptionDates` needs to be synced with `start`
       event.exceptionDates = event.exceptionDates?.map(value => {
@@ -178,7 +193,13 @@ export class CalendarClient {
 
   public deleteEvent = async ({ event }: CalendarEvent): Promise<CalendarResponse> => {
     const calendarObject = this.getCalendarObject(event)
-    if (!calendarObject) return { response: new Response(null, { status: 404 }), ical: '' }
+
+    if (!calendarObject) {
+      return {
+        response: new Response(null, { status: 404 }),
+        ical: ''
+      } as CalendarResponse
+    }
     const calendar = this.getCalendarByUrl(calendarObject.calendarUrl)!
 
     // FIXME - CJ - 2025-07-03 - Doing a deep copy probably be a better idea and avoid further issues
