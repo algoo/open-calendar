@@ -234,7 +234,10 @@ export class CalendarElement {
   }
 
   private fetchAndLoadEvents = async (info: EventCalendar.FetchInfo): Promise<EventCalendar.EventInput[]> => {
-    const calendarEvents = await this._client.fetchAndLoadEvents(info.startStr, info.endStr)
+    const [calendarEvents, _] = await Promise.all([
+      this._client.fetchAndLoadEvents(info.startStr, info.endStr),
+      this._client.fetchAndLoadVCards(),
+    ])
 
     return calendarEvents.map(({ event, calendarUrl }) => {
       const allDay = isEventAllDay(event)
