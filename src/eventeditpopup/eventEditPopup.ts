@@ -422,8 +422,8 @@ export class EventEditPopup {
           ...contact,
           role: roles[i],
           partstat: (contact.email === this._userContact?.email
-              ? data.get('user-participation-status')
-              : participationStatuses[i]
+            ? data.get('user-participation-status')
+            : participationStatuses[i]
           ) as IcsAttendeePartStatusType,
         })
       }) || undefined,
