@@ -74,7 +74,7 @@ export type EventEditCreateInfo = {
   vCards: AddressBookVCard[]
   handleCreate: EventEditCallback
 }
-export type EventEditUpdateInfo = {
+export type EventEditSelectInfo = {
   jsEvent: DomEvent
   userContact?: Contact,
   calendarUrl: string
@@ -84,6 +84,16 @@ export type EventEditUpdateInfo = {
   vCards: AddressBookVCard[]
   handleUpdate: EventEditCallback
   handleDelete: EventEditCallback
+}
+export type EventEditMoveResizeInfo = {
+  jsEvent: DomEvent
+  calendarUrl: string
+  userContact?: Contact,
+  event: IcsEvent
+  recurringEvent?: IcsEvent,
+  start: Date,
+  end: Date,
+  handleUpdate: EventEditCallback
 }
 export type EventEditDeleteInfo = {
   jsEvent: DomEvent
@@ -95,7 +105,8 @@ export type EventEditDeleteInfo = {
 }
 export type EventEditHandlers = {
   onCreateEvent: (info: EventEditCreateInfo) => void,
-  onUpdateEvent: (info: EventEditUpdateInfo) => void,
+  onSelectEvent: (info: EventEditSelectInfo) => void,
+  onMoveResizeEvent: (info: EventEditMoveResizeInfo) => void,
   onDeleteEvent: (info: EventEditDeleteInfo) => void,
 }
 

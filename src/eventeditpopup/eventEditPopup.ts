@@ -1,4 +1,5 @@
-import { attendeePartStatusTypes,
+import {
+  attendeePartStatusTypes,
   convertIcsRecurrenceRule,
   getEventEndFromDuration,
   type IcsAttendee,
@@ -27,9 +28,10 @@ import type { DefaultComponentsOptions,
   EventEditCallback,
   EventEditCreateInfo,
   EventEditDeleteInfo,
-  EventEditUpdateInfo,
+  EventEditMoveResizeInfo,
+  EventEditSelectInfo,
 } from '../types/options'
-import type { Calendar } from '../types/calendar'
+import type {Calendar, CalendarEvent} from '../types/calendar'
 import { attendeeRoleTypes, namedRRules } from '../contants'
 
 const html = /*html*/`
@@ -253,7 +255,7 @@ export class EventEditPopup {
     this._handleDelete = null
     this.open('', event, calendars, vCards, userContact)
   }
-  public onUpdate = ({
+  public onSelect = ({
     calendarUrl,
     calendars,
     vCards,
@@ -262,7 +264,7 @@ export class EventEditPopup {
     handleDelete,
     handleUpdate,
     userContact,
-  }: EventEditUpdateInfo) => {
+  }: EventEditSelectInfo) => {
     this._form.classList.toggle('open-calendar__event-edit--create', false)
     this._handleSave = handleUpdate
     this._handleDelete = handleDelete
@@ -272,7 +274,21 @@ export class EventEditPopup {
         calendarUrl, editAll ? recurringEvent : event, calendars, vCards, userContact)
     })
   }
-  public onDelete = ({calendarUrl, event, handleDelete}: EventEditDeleteInfo) => {
+
+  public onMoveResize = ({ calendarUrl, event, start, end, handleUpdate }: EventEditMoveResizeInfo) => {
+    const newEvent = { ...event }
+    const startDelta = start.getTime() - event.start.date.getTime()
+    newEvent.start = offsetDate(newEvent.start, startDelta)
+    if (event.end) {
+      const endDelta = end.getTime() - event.end.date.getTime()
+      newEvent.end = offsetDate(event.end, endDelta)
+    }
+    handleUpdate(
+      { calendarUrl, event: newEvent } as CalendarEvent
+    )
+  }
+
+  public onDelete = ({ calendarUrl, event, handleDelete}: EventEditDeleteInfo) => {
     handleDelete({calendarUrl, event})
   }
 

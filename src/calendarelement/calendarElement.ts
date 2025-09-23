@@ -98,7 +98,8 @@ export class CalendarElement {
     this._eventEditHandlers = options && hasEventHandlers(options)
       ? {
         onCreateEvent: options.onCreateEvent,
-        onUpdateEvent: options.onUpdateEvent,
+        onSelectEvent: options.onSelectEvent,
+        onMoveResizeEvent: options.onMoveResizeEvent,
         onDeleteEvent: options.onDeleteEvent,
       }
       : this.createDefaultEventEdit(target, options ?? {})
@@ -200,7 +201,8 @@ export class CalendarElement {
     this._eventEdit ??= new EventEditPopup(target, options)
     return {
       onCreateEvent: this._eventEdit.onCreate,
-      onUpdateEvent: this._eventEdit.onUpdate,
+      onSelectEvent: this._eventEdit.onSelect,
+      onMoveResizeEvent: this._eventEdit.onMoveResize,
       onDeleteEvent: this._eventEdit.onDelete,
     }
   }
@@ -232,7 +234,10 @@ export class CalendarElement {
   }
 
   private fetchAndLoadEvents = async (info: EventCalendar.FetchInfo): Promise<EventCalendar.EventInput[]> => {
-    const calendarEvents = await this._client.fetchAndLoadEvents(info.startStr, info.endStr)
+    const [calendarEvents, _] = await Promise.all([
+      this._client.fetchAndLoadEvents(info.startStr, info.endStr),
+      this._client.fetchAndLoadVCards(),
+    ])
 
     return calendarEvents.map(({ event, calendarUrl }) => {
       const allDay = isEventAllDay(event)
@@ -312,7 +317,7 @@ export class CalendarElement {
       n.addEventListener('event-edit', (jsEvent: Event) => {
         const ev = this._client.getCalendarEvent(event.extendedProps as EventUid)
         if (!ev) return
-        this._eventEditHandlers!.onUpdateEvent({
+        this._eventEditHandlers!.onSelectEvent({
           jsEvent,
           userContact: this._userContact,
           calendars: this._client.getCalendars(),
@@ -383,20 +388,15 @@ export class CalendarElement {
     const calendarEvent = this._client.getCalendarEvent(uid)
     if (!calendarEvent) return
 
-    const newEvent = { ...calendarEvent.event }
-    const startDelta = info.event.start.getTime() - info.oldEvent.start.getTime()
-    newEvent.start = offsetDate(newEvent.start, startDelta)
-    if (newEvent.end) {
-      const endDelta = info.event.end.getTime() - info.oldEvent.end.getTime()
-      newEvent.end = offsetDate(newEvent.end, endDelta)
-    }
-
-    // TODO - CJ - 2025-07-03 - Add an api 'onMoveResizeEvent'
-    // for ex. to allow a popup to open to ask if you want to change a single/all events if it's a recurrent event
-    const response = await this.handleUpdateEvent(
-      { calendarUrl: calendarEvent.calendarUrl, event: newEvent } as CalendarEvent
-    )
-    if (!response.ok) info.revert()
+    info.revert()
+    this._eventEditHandlers!.onMoveResizeEvent({
+      userContact: this._userContact,
+      jsEvent: info.jsEvent,
+      ...calendarEvent,
+      start: info.event.start,
+      end: info.event.end,
+      handleUpdate: this.handleUpdateEvent,
+    })
   }
 
   private onEventClicked = ({ event, jsEvent}: EventCalendar.EventClickInfo) => {
@@ -452,7 +452,7 @@ export class CalendarElement {
         const uid = event.extendedProps as EventUid
         const calendarEvent = this._client.getCalendarEvent(uid)
         if (!calendarEvent) return
-        this._eventEditHandlers!.onUpdateEvent({
+        this._eventEditHandlers!.onSelectEvent({
           jsEvent,
           userContact: this._userContact,
           calendars: this._client.getCalendars(),
@@ -469,7 +469,7 @@ export class CalendarElement {
       const uid = event.extendedProps as EventUid
       const calendarEvent = this._client.getCalendarEvent(uid)
       if (!calendarEvent) return
-      this._eventEditHandlers!.onUpdateEvent({
+      this._eventEditHandlers!.onSelectEvent({
         jsEvent,
         userContact: this._userContact,
         calendars: this._client.getCalendars(),
@@ -483,7 +483,7 @@ export class CalendarElement {
     const uid = event.extendedProps as EventUid
     const calendarEvent = this._client.getCalendarEvent(uid)
     if (!calendarEvent) return
-    this._eventEditHandlers!.onUpdateEvent({
+    this._eventEditHandlers!.onSelectEvent({
       jsEvent,
       userContact: this._userContact,
       calendars: this._client.getCalendars(),
