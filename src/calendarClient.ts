@@ -1,7 +1,19 @@
 import { type IcsCalendar, type IcsEvent } from 'ts-ics'
-import { createCalendarObject, deleteCalendarObject, fetchCalendarObjects, fetchCalendars, updateCalendarObject } from './helpers/dav-helper'
-import type { CalendarSource, ServerSource, Calendar, CalendarObject, EventUid, CalendarEvent, DisplayedCalendarEvent } from './types'
+import { createCalendarObject,
+  deleteCalendarObject,
+  fetchAddressBookObjects,
+  fetchAddressBooks,
+  fetchCalendarObjects,
+  fetchCalendars,
+  updateCalendarObject,
+  getEventObjectString,
+} from './helpers/dav-helper'
 import { isRRuleSourceEvent, isSameEvent, offsetDate } from './helpers/ics-helper'
+import type { CalendarSource, ServerSource, AddressBookSource, VCardProvider, CalendarResponse } from './types/options'
+import type { Calendar, CalendarEvent, CalendarObject, DisplayedCalendarEvent, EventUid } from './types/calendar'
+import type { AddressBook, AddressBookVCard, AddressBookObject, VCard } from './types/addressbook'
+import { VCardComponent } from './VCardComponent'
+import { isServerSource, isVCardProvider } from './helpers/types-helper'
 
 export class CalendarClient {
 
@@ -15,18 +27,42 @@ export class CalendarClient {
   private _recurringObjects: CalendarObject[] = []
   private _lastFetchNumber = 0
 
+  private _addressBooks: AddressBook[] = []
+  private _addressBookObjects: AddressBookObject[] = []
+  private _vCardProviders: VCardProvider[] = []
+  private _providedVCards: VCard[] = []
+
   public loadCalendars = async (sources: (ServerSource | CalendarSource)[]) => {
-    const calendarsPerSource = await Promise.all(sources.map(source => fetchCalendars(source)))
+    const calendarsPerSource = await Promise.all(sources.map(async source => {
+      try {
+        return await fetchCalendars(source)
+      } catch (error) {
+        const url = isServerSource(source) ? source.serverUrl : source.calendarUrl
+        console.error(`Could not fetch calendars from ${url}. ${error}`)
+        return []
+      }
+    }))
     this._calendars = calendarsPerSource.flat()
   }
 
   public getCalendars = () => this._calendars
 
+  public getCalendarByUrl = (url: string): Calendar | undefined => {
+    return this._calendars.find(c => c.url === url)
+  }
+
   public fetchAndLoadEvents = async (start: string, end: string): Promise<CalendarEvent[]> => {
     this._lastFetchNumber++
     const currentFetchNumber = this._lastFetchNumber
     const allObjects = await Promise.all(
-      this._calendars.map(calendar => fetchCalendarObjects(calendar, { start, end }, true)),
+      this._calendars.map(async calendar => {
+        try {
+          return await fetchCalendarObjects(calendar, { start, end }, true)
+        } catch (error) {
+          console.error(`Could not fetch events from ${calendar.url}. ${error}`)
+          return { calendarObjects: [], recurringObjects: [] }
+        }
+      }),
     )
     // NOTE - CJ - 2025-07-15 - only update the objects if this is the latest fetch
     // This can happen if this fetch took more time than the last one
@@ -44,7 +80,7 @@ export class CalendarClient {
   private getCalendarEventsFromCalendarObjects = (calendarObjects: CalendarObject[]): CalendarEvent[] => {
     return calendarObjects.flatMap(co => {
       const events = co.data.events ?? []
-      return events.map(event => ({ event: event, calendarUrl: co.calendarUrl }))
+      return events.map(event => ({ event, calendarUrl: co.calendarUrl }))
     })
   }
 
@@ -67,27 +103,29 @@ export class CalendarClient {
         // NOTE - CJ - 2025-07-03 - Since we look are just looking for the CalendarObject and not the event,
         // we just need to check the uid of any event, and not the recurrenceID
         if (event.uid !== uid.uid) continue
-        if (event.recurrenceId) {
-          for (const recurringObject of this._recurringObjects) {
-            for (const event of recurringObject.data.events ?? []) {
-              if (event.uid === uid.uid) return recurringObject
-            }
+        if (!event.recurrenceId) return calendarObject
+        for (const recurringObject of this._recurringObjects) {
+          for (const event of recurringObject.data.events ?? []) {
+            if (event.uid === uid.uid) return recurringObject
           }
-          return undefined
         }
-        return calendarObject
+        return undefined
       }
     }
     return undefined
   }
 
-  public getCalendarByUrl = (url: string): Calendar | undefined => {
-    return this._calendars.find(c => c.url === url)
-  }
 
-  public createEvent = async ({ calendarUrl, event }: CalendarEvent) => {
+  public createEvent = async ({ calendarUrl, event }: CalendarEvent): Promise<CalendarResponse> => {
     const calendar = this.getCalendarByUrl(calendarUrl)
-    if (!calendar) return { response: new Response(null, { status: 404 }), ical: '' }
+
+    if (!calendar) {
+      return {
+        response: new Response(null, { status: 404 }),
+        ical: ''
+      } as CalendarResponse
+    }
+
     const calendarObject: IcsCalendar = {
       // INFO - CJ - 2025-07-03 - prodId is a FPI (https://en.wikipedia.org/wiki/Formal_Public_Identifier)
       // '+//IDN algoo.fr//NONSGML Open Calendar v0.9//EN' would also be possible
@@ -100,9 +138,15 @@ export class CalendarClient {
   }
 
   // FIXME - CJ - 2025/06/03 - changing an object of calendar is not supported;
-  public updateEvent = async ({ event }: CalendarEvent) => {
+  public updateEvent = async ({ event }: CalendarEvent): Promise<CalendarResponse> => {
     const calendarObject = this.getCalendarObject(event)
-    if (!calendarObject) return { response: new Response(null, { status: 404 }), ical: '' }
+
+    if (!calendarObject) {
+      return {
+        response: new Response(null, { status: 404 }),
+        ical: ''
+      } as CalendarResponse
+    }
     const calendar = this.getCalendarByUrl(calendarObject.calendarUrl)!
 
     // FIXME - CJ - 2025-07-03 - Doing a deep copy probably be a better idea and avoid further issues
@@ -123,11 +167,13 @@ export class CalendarClient {
       // INFO - CJ - 2025-07-03 - `recurrenceId` of modified events needs to be synced with `start` of the root event
       calendarObject.data.events = calendarObject.data.events!.map(element => {
         if (element === event || !isRRuleSourceEvent(element, event)) return element
+
         const recurrenceOffset = element.recurrenceId!.value.date.getTime() - oldEvents[index].start.date.getTime()
+
         return {
           ...element,
           recurrenceId: { value: offsetDate(event.start, recurrenceOffset) },
-        }
+        } as IcsEvent
       })
       // INFO - CJ - 2025-07-03 - `exceptionDates` needs to be synced with `start`
       event.exceptionDates = event.exceptionDates?.map(value => {
@@ -135,18 +181,33 @@ export class CalendarClient {
         return offsetDate(event.start, recurrenceOffset)
       })
     }
-    const response = await updateCalendarObject(calendar, calendarObject)
-    if (!response.response.ok) calendarObject.data.events = oldEvents
-    return response
+    const {response, ical } = await updateCalendarObject(calendar, calendarObject)
+    if (!response.ok) calendarObject.data.events = oldEvents
+    return {
+      response,
+      ical: event.recurrenceId
+        ? getEventObjectString({...calendarObject!.data, events: [event]})
+        : ical,
+    }
   }
 
-  public deleteEvent = async ({ event }: CalendarEvent) => {
+  public deleteEvent = async ({ event }: CalendarEvent): Promise<CalendarResponse> => {
     const calendarObject = this.getCalendarObject(event)
-    if (!calendarObject) return { response: new Response(null, { status: 404 }), ical: '' }
+
+    if (!calendarObject) {
+      return {
+        response: new Response(null, { status: 404 }),
+        ical: ''
+      } as CalendarResponse
+    }
     const calendar = this.getCalendarByUrl(calendarObject.calendarUrl)!
 
     // FIXME - CJ - 2025-07-03 - Doing a deep copy probably be a better idea and avoid further issues
     const oldEvents = calendarObject.data.events ? [...calendarObject.data.events] : undefined
+    // NOTE - CJ - 2025-07-18 - The ical we need when deleting an event is the one before deletion
+    const ical = event.recurrenceId
+      ? getEventObjectString({...calendarObject!.data, events: [event]})
+      : getEventObjectString(calendarObject!.data)
 
     // NOTE - CJ - 2025-07-03 - When removing a recurring event instance, add it to exceptionDates
     if (event.recurrenceId) {
@@ -166,9 +227,56 @@ export class CalendarClient {
     }
 
     const action = calendarObject.data.events!.length === 0 ? deleteCalendarObject : updateCalendarObject
-    const response = await action(calendar, calendarObject)
+    const { response } = await action(calendar, calendarObject)
 
-    if (!response.response.ok) calendarObject.data.events = oldEvents
-    return response
+    if (!response.ok) calendarObject.data.events = oldEvents
+    return { response, ical }
+  }
+
+  public loadAddressBooks = async (sources: (ServerSource | AddressBookSource | VCardProvider)[]) => {
+    this._vCardProviders = sources.filter(s => isVCardProvider(s))
+    const davSources = sources.filter(s => !isVCardProvider(s)) as (ServerSource | AddressBookSource)[]
+
+    const addressBooksPerSources = await Promise.all(davSources.map(async source => {
+      try {
+        return await fetchAddressBooks(source)
+      } catch (error) {
+        const url = isServerSource(source) ? source.serverUrl : source.addressBookUrl
+        console.error(`Could not fetch address books from ${url}. ${error}`)
+        return []
+      }
+    }))
+    this._addressBooks = addressBooksPerSources.flat()
+  }
+
+  public fetchAndLoadVCards = async (): Promise<AddressBookVCard[]> => {
+    const vCards = await Promise.all(
+      this._addressBooks.map(async book => {
+        try {
+          return await fetchAddressBookObjects(book)
+        } catch (error) {
+          console.error(`Could not fetch vcards objects from ${book.url}. ${error}`)
+          return []
+        }
+      }),
+    )
+    this._addressBookObjects = vCards.flat()
+    this._providedVCards = (await Promise.all(this._vCardProviders.flatMap(p => p.fetchContacts()))).flat()
+    return this.getAddressBookVCards()
+  }
+
+  public getAddressBookVCards = (): AddressBookVCard[] => {
+    return [
+      ...this.getAddressBookVCardsFromObjects(this._addressBookObjects),
+      ...this.getAddressBookVCardsFromProvidedContacts(this._providedVCards),
+    ]
+  }
+
+  private getAddressBookVCardsFromObjects = (addressBookObjects: AddressBookObject[]): AddressBookVCard[] => {
+    // NOTE - CJ - 2025-07-16 - radicale does not accepts vcf files with more than one vcard component
+    return addressBookObjects.map(ao => ({ vCard: new VCardComponent(ao.data), addressBookUrl: ao.addressBookUrl }))
+  }
+  private getAddressBookVCardsFromProvidedContacts = (vCards: VCard[]): AddressBookVCard[] => {
+    return vCards.map(c => ({addressBookUrl: undefined, vCard: c}))
   }
 }

@@ -3,6 +3,10 @@
   gap: 0.25rem;
 }
 
+.open-calendar__event-edit__attendee>:first-child {
+  flex-grow: 1;
+}
+
 .open-calendar__event-edit__datetime {
   display: flex;
   gap: 0.25rem;
@@ -19,4 +23,8 @@
 /* NOTE - CJ - 2025-07-03 - Hide the `Delete` button we are creating an event */
 .open-calendar__event-edit--create [name="delete"] {
   visibility: hidden;
+}
+
+.open-calendar__event-edit--without-invite .open-calendar__event-edit__invite {
+  display: none;
 }

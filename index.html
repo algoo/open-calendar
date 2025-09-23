@@ -2,25 +2,90 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Algoo - Calendar</title>
 </head>
 
 <body style="height: 100vh; margin:0; padding: 5px; box-sizing: border-box;">
-  <div id="open-calendar"></div>
-  <script type="module">
-    import { getBasicAuthHeaders } from "tsdav";
-    import { createCalendar } from "./src";
+<div id="open-calendar"></div>
+<script type="module">
+  import {getBasicAuthHeaders} from 'tsdav'
+  import {createCalendar} from './src'
 
-    // TODO - CJ - 2025--03-07 - Add a proper login form and ask for the server path
-    const username = window.prompt("username")
-    const password = window.prompt("password")
-    createCalendar(
-      [{ serverUrl: "http://localhost:5232", headers: getBasicAuthHeaders({ username, password }) }],
-      document.getElementById("open-calendar"),
-    )
-  </script>
+  const onEventCreated = ({event, ical}) => {
+    console.log(ical)
+  }
+  const onEventUpdated = ({event, ical}) => {
+    console.log(ical)
+  }
+  const onEventDeleted = ({event, ical}) => {
+    console.log(ical)
+  }
+
+  // TODO - CJ - 2025--03-07 - Add a proper login form and ask for the server path
+  const username = 'user1@algoo.fr' // window.prompt('username')
+  const password = 'user1@algoo.fr' // window.prompt('password')
+  createCalendar(
+    [
+      // { serverUrl: 'http://localhost:5232', headers: getBasicAuthHeaders({ username, password }) },
+      // { serverUrl: 'http://localhost:7999/dav/', headers: getBasicAuthHeaders({ username, password }) },
+      {
+        calendarUrl: 'http://localhost:7999/dav/agenda/workspace/3/',
+        headers: getBasicAuthHeaders({username, password})
+      },
+      {
+        calendarUrl: 'http://localhost:7999/dav/agenda/workspace/1/',
+        headers: getBasicAuthHeaders({username, password})
+      },
+      // {
+      //   calendarUrl: 'http://localhost:7999/dav/agenda/workspace/2/',
+      //   headers: getBasicAuthHeaders({username, password})
+      // },
+    ],
+    [
+      // { serverUrl: 'http://localhost:5232', headers: getBasicAuthHeaders({ username, password }) },
+      // { serverUrl: 'http://localhost:7999/dav/', headers: getBasicAuthHeaders({ username, password }) },
+      {
+        addressBookUrl: 'http://localhost:7999/dav/addressbook/workspace/3/',
+        headers: getBasicAuthHeaders({username, password})
+      // }, {
+      //   addressBookUrl: 'http://localhost:7999/dav/addressbook/workspace/1/',
+      //   headers: getBasicAuthHeaders({username, password})
+      // }, {
+      //   addressBookUrl: 'http://localhost:7999/dav/addressbook/user/3/',
+      //   headers: getBasicAuthHeaders({username, password})
+      }
+      // {
+      //   addressBookUrl: 'http://localhost:7999/dav/addressbook/workspace/2/',
+      //   headers: getBasicAuthHeaders({username, password})
+      // },
+      // {
+      //   addressBookUrl: 'http://localhost:7999/dav/addressbook/workspace/3/',
+      //   headers: getBasicAuthHeaders({username, password})
+      // },
+      // {
+      //   fetchContacts: () => Promise.resolve([{
+      //     name: 'zoro',
+      //     email: 'z@z.z',
+      //   }, {
+      //     name: 'ant',
+      //     email: 'ant@a.nt',
+      //   }])
+      // }
+    ],
+    document.getElementById('open-calendar'),
+    {
+      onEventCreated,
+      onEventUpdated,
+      onEventDeleted,
+      // hideVCardEmails: true,
+      userContact: {
+        email: username
+      },
+    }
+  )
+</script>
 </body>
 
 </html>
