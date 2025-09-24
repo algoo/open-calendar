@@ -1,6 +1,6 @@
 {
   "name": "open-dav-calendar",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "A modern web calendar frontend for CalDAV based calendars",
   "homepage": "https://github.com/algoo/open-calendar",
   "bugs": {
