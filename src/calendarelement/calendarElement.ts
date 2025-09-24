@@ -12,7 +12,7 @@ import {
   type IcsEvent,
   type IcsAttendee,
   type IcsAttendeePartStatusType,
-  type IcsDateObject
+  type IcsDateObject,
 } from 'ts-ics'
 import { EventEditPopup } from '../eventeditpopup/eventEditPopup'
 import { hasCalendarHandlers, hasEventHandlers } from '../helpers/types-helper'
@@ -234,9 +234,9 @@ export class CalendarElement {
   }
 
   private fetchAndLoadEvents = async (info: EventCalendar.FetchInfo): Promise<EventCalendar.EventInput[]> => {
-    const [calendarEvents, _] = await Promise.all([
+    const [calendarEvents] = await Promise.all([
       this._client.fetchAndLoadEvents(info.startStr, info.endStr),
-      this._client.fetchAndLoadVCards(),
+      this._client.fetchAndLoadVCards(), // INFO - PG - 2025-09-24 - no return value
     ])
 
     return calendarEvents.map(({ event, calendarUrl }) => {

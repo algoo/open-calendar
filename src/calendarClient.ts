@@ -122,7 +122,7 @@ export class CalendarClient {
     if (!calendar) {
       return {
         response: new Response(null, { status: 404 }),
-        ical: ''
+        ical: '',
       } as CalendarResponse
     }
 
@@ -144,7 +144,7 @@ export class CalendarClient {
     if (!calendarObject) {
       return {
         response: new Response(null, { status: 404 }),
-        ical: ''
+        ical: '',
       } as CalendarResponse
     }
     const calendar = this.getCalendarByUrl(calendarObject.calendarUrl)!
@@ -197,7 +197,7 @@ export class CalendarClient {
     if (!calendarObject) {
       return {
         response: new Response(null, { status: 404 }),
-        ical: ''
+        ical: '',
       } as CalendarResponse
     }
     const calendar = this.getCalendarByUrl(calendarObject.calendarUrl)!

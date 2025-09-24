@@ -284,7 +284,7 @@ export class EventEditPopup {
       newEvent.end = offsetDate(event.end, endDelta)
     }
     handleUpdate(
-      { calendarUrl, event: newEvent } as CalendarEvent
+      { calendarUrl, event: newEvent } as CalendarEvent,
     )
   }
 
