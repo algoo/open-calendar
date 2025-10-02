@@ -262,7 +262,6 @@ export class CalendarClient {
     )
     this._addressBookObjects = vCards.flat()
     this._providedVCards = (await Promise.all(this._vCardProviders.flatMap(p => p.fetchContacts()))).flat()
-    console.log(this._providedVCards)
     return this.getAddressBookVCards()
   }
 
